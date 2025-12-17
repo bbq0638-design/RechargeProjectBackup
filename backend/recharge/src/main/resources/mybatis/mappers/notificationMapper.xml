@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.notification.dao.NotificationDAO">
+
+    <insert id="insertNotification" parameterType="com.recharge.notification.vo.NotificationVO">
+        INSERT INTO TB_NOTIFICATION (
+        NOTI_ID, RECEIVER_ID, SENDER_ID, NOTI_TYPE, MESSAGE, TARGET_TYPE, TARGET_ID, IS_READ, CREATE_DATE
+        ) VALUES (
+        SEQ_NOTI_ID.NEXTVAL, #{receiverId}, #{senderId}, #{notiType}, #{message}, #{targetType}, #{targetId}, 'N', SYSDATE
+        )
+    </insert>
+
+    <select id="selectNotificationsByUserId" parameterType="String" resultType="com.recharge.notification.vo.NotificationVO">
+        SELECT
+        NOTI_ID AS notiId,
+        RECEIVER_ID AS receiverId,
+        SENDER_ID AS senderId,
+        NOTI_TYPE AS notiType,
+        MESSAGE AS message,
+        TARGET_TYPE AS targetType,
+        TARGET_ID AS targetId,
+        IS_READ AS isRead,
+        TO_CHAR(CREATE_DATE, 'YYYY-MM-DD HH24:MI') AS createDate
+        FROM TB_NOTIFICATION
+        WHERE RECEIVER_ID = #{userId}
+        ORDER BY IS_READ ASC, CREATE_DATE DESC
+    </select>
+
+    <update id="updateNotificationRead" parameterType="Long">
+        UPDATE TB_NOTIFICATION SET IS_READ = 'Y' WHERE NOTI_ID = #{notiId}
+    </update>
+
+    <select id="getBoardWriter" parameterType="Long" resultType="String">
+        SELECT USER_ID FROM TB_COMMUNITY WHERE COMMUNITY_POST_ID = #{postId}
+    </select>
+    <select id="getMoviePostWriter" parameterType="Long" resultType="String">
+        SELECT USER_ID FROM TB_MOVIE_POST WHERE MOVIE_POST_ID = #{postId}
+    </select>
+    <select id="getMusicPostWriter" parameterType="Long" resultType="String">
+        SELECT USER_ID FROM TB_MUSIC_POST WHERE MUSIC_POST_ID = #{postId}
+    </select>
+
+    <select id="getBoardTitle" parameterType="Long" resultType="String">
+        SELECT COMMUNITY_TITLE FROM TB_COMMUNITY WHERE COMMUNITY_POST_ID = #{postId}
+    </select>
+
+    <select id="getMoviePostTitle" parameterType="Long" resultType="String">
+        SELECT MOVIE_POST_TITLE FROM TB_MOVIE_POST WHERE MOVIE_POST_ID = #{postId}
+    </select>
+
+    <select id="getMusicPostTitle" parameterType="Long" resultType="String">
+        SELECT MUSIC_POST_TITLE FROM TB_MUSIC_POST WHERE MUSIC_POST_ID = #{postId}
+    </select>
+
+    <select id="getUserFcmToken" parameterType="String" resultType="String">
+        SELECT FCM_TOKEN FROM TB_USER WHERE USER_ID = #{userId}
+    </select>
+
+    <select id="getUserNickname" parameterType="String" resultType="String">
+        SELECT USER_NICKNAME FROM TB_USER WHERE USER_ID = #{userId}
+    </select>
+
+</mapper>

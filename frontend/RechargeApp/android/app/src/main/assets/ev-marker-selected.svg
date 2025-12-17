@@ -1,0 +1,27 @@
+<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Glow -->
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="coloredBlur"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Marker body -->
+  <path d="M25 3
+       C15 3 7 11 7 21
+       C7 34 22 46 24 47
+       C24.4 47.3 24.7 47.3 25 47
+       C28 46 43 34 43 21
+       C43 11 35 3 25 3Z" fill="white" stroke="#00FFB2" stroke-width="3" filter="url(#glow)"></path>
+
+  <!-- Inner circle -->
+  <circle cx="25" cy="21" r="8" fill="#00FFB2"></circle>
+
+  <!-- EV bolt icon -->
+  <path d="M23 16 L28 21 L24 21 L27 26" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>

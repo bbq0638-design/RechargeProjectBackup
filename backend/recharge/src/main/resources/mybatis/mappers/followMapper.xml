@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.follow.dao.FollowDAO">
+
+    <select id="countFollow" parameterType="com.recharge.follow.vo.FollowVO" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_FOLLOW
+        WHERE FOLLOWER_ID = #{followerId}
+          AND FOLLOWING_ID = #{followingId}
+    </select>
+
+    <insert id="insertFollow" parameterType="com.recharge.follow.vo.FollowVO">
+        INSERT INTO TB_FOLLOW (
+            FOLLOW_ID,
+            FOLLOWER_ID,
+            FOLLOWING_ID,
+            CREATE_DATE,
+            CREATE_ID,
+            UPDATED_DATE,
+            UPDATED_ID
+        ) VALUES (
+        SEQ_FOLLOW.NEXTVAL,
+            #{followerId},
+            #{followingId},
+            SYSDATE,
+            #{createId},
+            SYSDATE,
+            #{updatedId}
+        )
+    </insert>
+
+    <delete id="deleteFollow" parameterType="com.recharge.follow.vo.FollowVO">
+        DELETE FROM TB_FOLLOW
+        WHERE FOLLOWER_ID = #{followerId}
+          AND FOLLOWING_ID = #{followingId}
+    </delete>
+
+    <select id="getFollowerList" parameterType="String" resultType="com.recharge.follow.vo.FollowVO">
+        SELECT
+        f.FOLLOW_ID AS followId,
+        f.FOLLOWER_ID AS followerId,
+        f.FOLLOWING_ID AS followingId,
+        u.USER_ID AS targetUserId,
+        u.USER_NICKNAME AS userNickname,
+        f.CREATE_DATE AS createDate
+        FROM TB_FOLLOW f
+        JOIN TB_USER u
+        ON f.FOLLOWER_ID = u.USER_ID
+        WHERE f.FOLLOWING_ID = #{followingId}
+        ORDER BY f.CREATE_DATE DESC
+    </select>
+
+
+    <select id="getFollowingList" parameterType="String" resultType="com.recharge.follow.vo.FollowVO">
+        SELECT
+        f.FOLLOW_ID AS followId,
+        f.FOLLOWER_ID AS followerId,
+        f.FOLLOWING_ID AS followingId,
+        u.USER_ID AS targetUserId,
+        u.USER_NICKNAME AS userNickname,
+        f.CREATE_DATE AS createDate
+        FROM TB_FOLLOW f
+        JOIN TB_USER u
+        ON f.FOLLOWING_ID = u.USER_ID
+        WHERE f.FOLLOWER_ID = #{followerId}
+        ORDER BY f.CREATE_DATE DESC
+    </select>
+
+</mapper>

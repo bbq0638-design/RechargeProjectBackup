@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.movie.dao.MoviePostDAO">
+
+    <!-- 게시글 매핑 -->
+    <resultMap id="MoviePostMap" type="MoviePostVO">
+        <id column="MOVIE_POST_ID" property="moviePostId"/>
+
+        <result column="USER_ID" property="userId"/>
+        <result column="USER_NICKNAME" property="userNickname"/>
+        <result column="MOVIE_ID" property="movieId"/>
+        <result column="MOVIE_POST_TITLE" property="moviePostTitle"/>
+        <result column="MOVIE_POST_TEXT" property="moviePostText"/>
+        <result column="CREATE_DATE" property="createDate"/>
+        <result column="CREATE_ID" property="createId"/>
+        <result column="UPDATED_DATE" property="updatedDate"/>
+        <result column="UPDATED_ID" property="updatedId"/>
+
+        <!-- ⭐ 영화 정보 매핑 -->
+        <result column="MOVIE_TITLE" property="movieTitle"/>
+        <result column="MOVIE_POSTER" property="moviePoster"/>
+        <result column="MOVIE_SCORE" property="movieScore"/>
+
+        <result column="MOVIE_DIRECTOR" property="movieDirector"/>
+        <result column="MOVIE_ACTOR" property="movieActor"/>
+        <result column="MOVIE_TRAILER" property="movieTrailer"/>
+
+        <result column="GENRE_NAME" property="genreName"/>
+        <result column="GENRE_CODE" property="genreCode"/>
+
+        <result column="MOVIE_DATE" property="movieDate"/>
+        <result column="MOVIE_COMMENT" property="movieComment"/>
+    </resultMap>
+
+    <!-- 게시글 등록 -->
+    <insert id="insertMoviePost"
+            parameterType="MoviePostVO">
+
+        <selectKey keyProperty="moviePostId" resultType="long" order="BEFORE">
+            SELECT SEQ_MOVIE_POST.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO TB_MOVIE_POST (
+        MOVIE_POST_ID,
+        USER_ID,
+        MOVIE_ID,
+        MOVIE_POST_TITLE,
+        MOVIE_POST_TEXT,
+        CREATE_DATE,
+        CREATE_ID,
+        UPDATED_DATE,
+        UPDATED_ID
+        ) VALUES (
+        #{moviePostId},
+        #{userId},
+        #{movieId},
+        #{moviePostTitle},
+        #{moviePostText},
+        SYSDATE,
+        #{createId},
+        SYSDATE,
+        #{updatedId}
+        )
+    </insert>
+
+
+    <!-- 게시글 리스트 조회 -->
+    <select id="selectAll" resultMap="MoviePostMap">
+        SELECT
+        MP.MOVIE_POST_ID,
+        MP.USER_ID,
+        U.USER_NICKNAME AS USER_NICKNAME,
+        MP.MOVIE_ID,
+        MP.MOVIE_POST_TITLE,
+        MP.MOVIE_POST_TEXT,
+        MP.CREATE_DATE,
+        MP.CREATE_ID,
+        MP.UPDATED_DATE,
+        MP.UPDATED_ID,
+
+        M.MOVIE_TITLE,
+        M.MOVIE_POSTER,
+        M.MOVIE_SCORE,
+        M.MOVIE_DIRECTOR,
+        M.MOVIE_ACTOR,
+        M.MOVIE_TRAILER,
+        M.MOVIE_DATE,
+        M.MOVIE_COMMENT,
+
+        C.COMMON_CATEGORY_NAME AS GENRE_NAME,
+        C.COMMON_CATEGORY_CODE AS GENRE_CODE
+
+        FROM TB_MOVIE_POST MP
+        LEFT JOIN TB_USER U ON U.USER_ID = MP.USER_ID
+        LEFT JOIN TB_MOVIE M
+        ON M.MOVIE_ID = MP.MOVIE_ID
+        LEFT JOIN TB_COMMON_CATEGORY C
+        ON C.COMMON_CATEGORY_ID = M.COMMON_CATEGORY_ID
+        ORDER BY MP.MOVIE_POST_ID DESC
+    </select>
+
+    <!-- 상세 조회 -->
+    <select id="selectById" parameterType="long" resultMap="MoviePostMap">
+        SELECT
+        MP.MOVIE_POST_ID,
+        MP.USER_ID,
+        U.USER_NICKNAME AS USER_NICKNAME,
+        MP.MOVIE_ID,
+        MP.MOVIE_POST_TITLE,
+        MP.MOVIE_POST_TEXT,
+        MP.CREATE_DATE,
+        MP.CREATE_ID,
+        MP.UPDATED_DATE,
+        MP.UPDATED_ID,
+
+        M.MOVIE_TITLE,
+        M.MOVIE_POSTER,
+        M.MOVIE_SCORE,
+        M.MOVIE_DIRECTOR,
+        M.MOVIE_ACTOR,
+        M.MOVIE_TRAILER,
+
+        C.COMMON_CATEGORY_NAME AS GENRE_NAME,
+        C.COMMON_CATEGORY_CODE AS GENRE_CODE,
+
+        M.MOVIE_DATE,
+        M.MOVIE_COMMENT
+
+        FROM TB_MOVIE_POST MP
+        LEFT JOIN TB_USER U ON U.USER_ID = MP.USER_ID
+        LEFT JOIN TB_MOVIE M
+        ON M.MOVIE_ID = MP.MOVIE_ID
+        LEFT JOIN TB_COMMON_CATEGORY C
+        ON C.COMMON_CATEGORY_ID = M.COMMON_CATEGORY_ID
+        WHERE MP.MOVIE_POST_ID = #{postId}
+    </select>
+
+    <select id="findByTmdbCode" parameterType="string" resultType="map">
+        SELECT
+        COMMON_CATEGORY_ID,
+        COMMON_CATEGORY_NAME,
+        COMMON_CATEGORY_CODE
+        FROM TB_COMMON_CATEGORY
+        WHERE COMMON_CATEGORY_SYSTEM = 'TMDB'
+        AND COMMON_CATEGORY_CODE = #{code}
+    </select>
+
+    <!-- 특정 사용자의 다른 게시글 조회 -->
+    <select id="selectByUserId" parameterType="string" resultMap="MoviePostMap">
+        SELECT
+        MP.MOVIE_POST_ID,
+        MP.USER_ID,
+        MP.MOVIE_ID,
+        MP.MOVIE_POST_TITLE,
+        MP.MOVIE_POST_TEXT,
+        MP.CREATE_DATE,
+        MP.CREATE_ID,
+        MP.UPDATED_DATE,
+        MP.UPDATED_ID,
+
+        M.MOVIE_TITLE,
+        M.MOVIE_POSTER,
+        M.MOVIE_SCORE,
+        M.MOVIE_DIRECTOR,
+        M.MOVIE_ACTOR,
+        M.MOVIE_TRAILER,
+        M.MOVIE_DATE,
+        M.MOVIE_COMMENT,
+
+        C.COMMON_CATEGORY_NAME AS GENRE_NAME,
+        C.COMMON_CATEGORY_CODE AS GENRE_CODE
+
+        FROM TB_MOVIE_POST MP
+        LEFT JOIN TB_MOVIE M ON M.MOVIE_ID = MP.MOVIE_ID
+        LEFT JOIN TB_COMMON_CATEGORY C ON C.COMMON_CATEGORY_ID = M.COMMON_CATEGORY_ID
+        WHERE MP.USER_ID = #{userId}
+        ORDER BY MP.MOVIE_POST_ID DESC
+    </select>
+
+    <update id="updateMoviePost" parameterType="MoviePostVO">
+        UPDATE TB_MOVIE_POST
+        SET
+        MOVIE_ID = #{movieId,jdbcType=BIGINT},
+        MOVIE_POST_TITLE = #{moviePostTitle, jdbcType=VARCHAR},
+        MOVIE_POST_TEXT = #{moviePostText, jdbcType=VARCHAR},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{updatedId, jdbcType=VARCHAR}
+        WHERE MOVIE_POST_ID = #{moviePostId,jdbcType=VARCHAR}
+    </update>
+
+    <delete id="deletePost" parameterType="long">
+        DELETE FROM TB_MOVIE_POST WHERE MOVIE_POST_ID = #{postId}
+    </delete>
+
+
+
+</mapper>

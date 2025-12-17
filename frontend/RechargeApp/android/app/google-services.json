@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "333226604026",
+    "project_id": "recharge-4b1b0",
+    "storage_bucket": "recharge-4b1b0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:333226604026:android:ce04692924fbcd33fbe043",
+        "android_client_info": {
+          "package_name": "com.rechargeapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCszNm3CXD9u8BQSyCX6zCwdKj4iQ05-nk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

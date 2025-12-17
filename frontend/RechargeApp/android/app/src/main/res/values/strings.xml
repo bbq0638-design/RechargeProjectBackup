@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RechargeApp</string>
+
+    <string name="kakao_app_key">6dc53edccb2b0d8f682b516e91f31cf7</string>
+</resources>

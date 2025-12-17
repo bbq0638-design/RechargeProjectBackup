@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.music.dao.MusicDAO">
+    <resultMap id="MusicMap" type="MusicVO">
+        <id     column="MUSIC_ID"           property="musicId"/>
+        <result column="COMMON_CATEGORY_ID" property="commonCategoryId"/>
+        <result column="MUSIC_TITLE"        property="musicTitle"/>
+        <result column="MUSIC_SINGER"       property="musicSinger"/>
+        <result column="MUSIC_IMAGE_PATH"   property="musicImagePath"/>
+        <result column="CATEGORY_NAME"      property="genreName"/>
+        <result column="CATEGORY_CODE"      property="genreCode"/>
+        <result column="MUSIC_FLAG" property="musicFlag"/>
+        <result column="CREATE_DATE"        property="createDate"/>
+        <result column="CREATE_ID"          property="createId"/>
+        <result column="UPDATED_DATE"       property="updatedDate"/>
+        <result column="UPDATED_ID"         property="updatedId"/>
+    </resultMap>
+
+    <sql id="BaseSelect">
+        SELECT
+        M.MUSIC_ID,
+        M.COMMON_CATEGORY_ID,
+        M.MUSIC_TITLE,
+        M.MUSIC_SINGER,
+        M.MUSIC_IMAGE_PATH,
+        M.MUSIC_FLAG,
+        M.CREATE_DATE,
+        M.CREATE_ID,
+        M.UPDATED_DATE,
+        M.UPDATED_ID,
+
+        C.COMMON_CATEGORY_NAME AS CATEGORY_NAME,
+        C.COMMON_CATEGORY_CODE AS CATEGORY_CODE
+
+        FROM TB_MUSIC M
+        LEFT JOIN TB_COMMON_CATEGORY C
+        ON M.COMMON_CATEGORY_ID = C.COMMON_CATEGORY_ID
+    </sql>
+
+    <insert id="insertMusic" parameterType="MusicVO">
+        INSERT INTO TB_MUSIC (
+        MUSIC_ID,
+        COMMON_CATEGORY_ID,
+        MUSIC_TITLE,
+        MUSIC_SINGER,
+        MUSIC_IMAGE_PATH,
+        MUSIC_FLAG,
+        CREATE_DATE,
+        CREATE_ID,
+        UPDATED_DATE,
+        UPDATED_ID
+        )
+        VALUES (
+        #{musicId},
+        #{commonCategoryId},
+        #{musicTitle},
+        #{musicSinger},
+        #{musicImagePath},
+        #{musicFlag},
+        SYSDATE,
+        'SYSTEM',
+        SYSDATE,
+        'SYSTEM'
+        )
+    </insert>
+
+    <update id="updateMusic" parameterType="MusicVO">
+        UPDATE TB_MUSIC
+        SET
+        COMMON_CATEGORY_ID = #{commonCategoryId},
+        MUSIC_TITLE = #{musicTitle},
+        MUSIC_SINGER = #{musicSinger},
+        MUSIC_IMAGE_PATH = #{musicImagePath},
+        MUSIC_FLAG = #{musicFlag},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = 'SYSTEM'
+        WHERE MUSIC_ID = #{musicId}
+    </update>
+
+    <select id="existsMusic" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_MUSIC
+        WHERE MUSIC_ID = #{musicId}
+    </select>
+
+    <select id="selectMusicByFlag" parameterType="string" resultMap="MusicMap">
+        <include refid="BaseSelect"/>
+        WHERE M.MUSIC_FLAG = #{musicFlag}
+        ORDER BY M.MUSIC_ID
+    </select>
+
+
+    <select id="selectMusicById" parameterType="long" resultMap="MusicMap">
+        <include refid="BaseSelect"/>
+        WHERE M.MUSIC_ID = #{musicId}
+    </select>
+
+    <select id="selectAllMusic" resultMap="MusicMap">
+        <include refid="BaseSelect"/>
+        ORDER BY
+        CASE M.COMMON_CATEGORY_ID
+        WHEN 'MUSIC1' THEN 1
+        WHEN 'MUSIC2' THEN 2
+        ELSE 3
+        END,
+        M.CREATE_DATE DESC
+    </select>
+
+    <select id="getLatestKrUpdateDate" resultType="string">
+        SELECT TO_CHAR(MAX(UPDATED_DATE), 'YYYY-MM-DD')
+        FROM TB_MUSIC
+        WHERE MUSIC_FLAG = 'KR_TOP100'
+    </select>
+
+    <select id="getLatestUsUpdateDate" resultType="string">
+        SELECT TO_CHAR(MAX(UPDATED_DATE), 'YYYY-MM-DD')
+        FROM TB_MUSIC
+        WHERE MUSIC_FLAG = 'US_TOP100'
+    </select>
+
+    <delete id="deleteByFlag" parameterType="string">
+        DELETE FROM TB_MUSIC
+        WHERE MUSIC_FLAG = #{musicFlag}
+    </delete>
+
+</mapper>

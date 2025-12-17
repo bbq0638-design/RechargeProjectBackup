@@ -1,0 +1,73 @@
+plugins {
+	id 'java'
+	// id 'war' // [수정] 이 줄을 제거했습니다. (별도 톰캣 서버 배포용)
+	id 'org.springframework.boot' version '3.2.3' // [수정] 3.5.8은 존재하지 않는 버전일 수 있어 안정적인 최신 버전으로 변경했습니다.
+	id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.recharge'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// 1. 웹 서버 필수 (내장 톰캣 포함)
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// 2. MyBatis
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// 3. Oracle & Lombok
+	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// 4. 개발 툴
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// [중요 수정] providedRuntime ... tomcat 라인을 삭제했습니다.
+	// 이제 'spring-boot-starter-web' 안에 있는 톰캣이 정상적으로 작동합니다.
+
+	// 5. Security & JWT (로그인 관련)
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// 6. 기타 및 테스트
+	// jakarta.servlet-api는 starter-web에 포함되어 있으므로 명시하지 않아도 되지만, 에러 방지를 위해 둡니다.
+	implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	implementation 'org.json:json:20240303'
+
+	implementation 'com.google.auth:google-auth-library-oauth2-http:1.23.0'
+
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+
+	implementation 'com.google.firebase:firebase-admin:9.2.0'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

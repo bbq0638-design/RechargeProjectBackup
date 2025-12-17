@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.user.dao.UserDAO">
+
+    <!-- 회원가입 -->
+    <insert id="insertUser" parameterType="com.recharge.user.vo.UserVO">
+        INSERT INTO TB_USER (
+        USER_ID, USER_PWD, USER_EMAIL,
+        USER_NAME, USER_NICKNAME, USER_BIRTH,
+        USER_GENDER, USER_PHONE, USER_CARMODEL,
+        USER_ROLE, DEVICE_OS, DEVICE_VERSION,
+        FCM_TOKEN, CREATE_DATE, CREATE_ID,
+        UPDATED_DATE, UPDATED_ID
+        ) VALUES (
+        #{userId},
+        #{userPwd},
+        #{userEmail},
+        #{userName},
+        #{userNickname},
+        #{userBirth},
+        #{userGender},
+        #{userPhone},
+        #{userCarModel},
+        #{userRole},
+        #{deviceOs, jdbcType=VARCHAR},
+        #{deviceVersion, jdbcType=VARCHAR},
+        #{fcmToken, jdbcType=VARCHAR},
+        SYSDATE,
+        #{createId, jdbcType=VARCHAR},
+        SYSDATE,
+        #{updatedId, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <!-- 아이디 중복 체크 -->
+    <select id="checkUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_USER
+        WHERE USER_ID = #{userId,jdbcType=VARCHAR}
+    </select>
+
+    <!-- 닉네임 중복 체크 -->
+    <select id="checkUserNickName" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_USER
+        WHERE USER_NICKNAME = #{userNickname,jdbcType=VARCHAR}
+    </select>
+
+    <!-- 로그인 -->
+    <select id="getUserById" parameterType="string" resultType="com.recharge.user.vo.UserVO">
+        SELECT
+        USER_ID, USER_PWD, USER_EMAIL,
+        USER_NAME, USER_NICKNAME, USER_BIRTH,
+        USER_GENDER, USER_PHONE, USER_CARMODEL,
+        USER_ROLE, DEVICE_OS, DEVICE_VERSION,
+        FCM_TOKEN, CREATE_DATE, CREATE_ID,
+        UPDATED_DATE, UPDATED_ID
+        FROM TB_USER
+        WHERE USER_ID = #{userId}
+    </select>
+
+    <!-- 디바이스 정보 -->
+    <update id="updateDeviceInfo" parameterType="com.recharge.user.vo.UserVO">
+        UPDATE TB_USER
+        SET
+        DEVICE_OS = #{deviceOs, jdbcType=VARCHAR},
+        DEVICE_VERSION = #{deviceVersion, jdbcType=VARCHAR},
+        FCM_TOKEN = #{fcmToken, jdbcType=VARCHAR},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{updatedId, jdbcType=VARCHAR}
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <!--아이디 찾기 -->
+    <select id="findUserId" parameterType="com.recharge.user.vo.UserVO" resultType="String">
+        SELECT USER_ID
+        FROM TB_USER
+        WHERE USER_NAME = #{userName}
+        AND USER_EMAIL= #{userEmail}
+    </select>
+
+    <!-- 비밀번호 찾기 : 유저 확인 -->
+    <select id="findUserForPasswordReset" parameterType="com.recharge.user.vo.UserVO" resultType="com.recharge.user.vo.UserVO">
+        SELECT
+        USER_ID, USER_EMAIL, USER_NAME,
+        RESET_TOKEN, TOKEN_EXPIRE
+        FROM TB_USER
+        WHERE USER_ID = #{userId}
+        AND USER_NAME = #{userName}
+        AND USER_EMAIL = #{userEmail}
+    </select>
+
+
+    <!-- 비밀번호 재설정 토큰 저장 -->
+    <update id="updateResetToken" parameterType="com.recharge.user.vo.UserVO">
+        UPDATE TB_USER
+        SET RESET_TOKEN = #{resetToken},
+        TOKEN_EXPIRE = #{tokenExpire},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{userId}
+        WHERE USER_ID = #{userId}
+        AND USER_EMAIL = #{userEmail}
+    </update>
+
+
+    <!-- 토큰으로 사용자 조회 (유효성 검사 포함) -->
+    <select id="getUserByResetToken" parameterType="string" resultType="com.recharge.user.vo.UserVO">
+        SELECT USER_ID, USER_EMAIL,
+        RESET_TOKEN, TOKEN_EXPIRE
+        FROM TB_USER
+        WHERE RESET_TOKEN = #{resetToken}
+        AND TOKEN_EXPIRE > SYSDATE    <!-- 🔥 유효기간 검증 -->
+    </select>
+
+
+    <!-- 비밀번호 변경 (토큰 사용 후 삭제) -->
+    <update id="updateUserPassword" parameterType="com.recharge.user.vo.UserVO">
+        UPDATE TB_USER
+        SET USER_PWD = #{userPwd},
+        RESET_TOKEN = NULL,
+        TOKEN_EXPIRE = NULL,
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{userId}
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <!-- 이메일 중복 체크 -->
+    <select id="checkUserEmail" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_USER
+        WHERE USER_EMAIL = #{userEmail,jdbcType=VARCHAR}
+    </select>
+
+    <update id="updateEmailAuthCode" parameterType="com.recharge.user.vo.UserVO">
+        MERGE INTO TB_USER u
+        USING (SELECT #{userEmail} AS USER_EMAIL FROM dual) d
+        ON (u.USER_EMAIL = d.USER_EMAIL)
+        WHEN MATCHED THEN UPDATE SET
+        EMAIL_AUTH_CODE = #{emailAuthCode},
+        EMAIL_AUTH_EXPIRE = #{emailAuthExpire},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{userEmail}
+        WHEN NOT MATCHED THEN
+        INSERT (
+        USER_EMAIL,
+        USER_PWD,
+        USER_NAME,
+        USER_NICKNAME,
+        USER_BIRTH,
+        USER_ROLE,
+        EMAIL_AUTH_CODE,
+        EMAIL_AUTH_EXPIRE,
+        CREATE_DATE,
+        CREATE_ID
+        )
+        VALUES (
+        #{userEmail},
+        'TEMP',
+        'TEMP',
+        'TEMP',
+        '19900101',
+        'TEMP',
+        #{emailAuthCode},
+        #{emailAuthExpire},
+        SYSDATE,
+        #{userEmail}
+        )
+    </update>
+
+
+
+
+    <!-- 인증 코드 확인 -->
+    <select id="getUserByEmailAuthCode" parameterType="com.recharge.user.vo.UserVO"
+            resultType="com.recharge.user.vo.UserVO">
+        SELECT USER_ID, USER_EMAIL, EMAIL_VERIFIED
+        FROM TB_USER
+        WHERE EMAIL_AUTH_CODE = #{emailAuthCode}
+        AND USER_EMAIL = #{userEmail}
+        AND EMAIL_AUTH_EXPIRE > SYSDATE
+    </select>
+
+    <!-- 이메일 인증 완료 -->
+    <update id="verifyUserEmail" parameterType="com.recharge.user.vo.UserVO">
+        UPDATE TB_USER
+        SET EMAIL_VERIFIED = 'Y',
+        EMAIL_AUTH_CODE = NULL,
+        EMAIL_AUTH_EXPIRE = NULL,
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{userEmail}
+        WHERE USER_EMAIL = #{userEmail}
+    </update>
+
+    <!-- 이메일 인증 후 최종 유저 정보 업데이트 -->
+    <update id="updateUserAfterEmailVerified" parameterType="com.recharge.user.vo.UserVO">
+        UPDATE TB_USER
+        SET USER_ID = #{userId},
+        USER_PWD = #{userPwd},
+        USER_NAME = #{userName},
+        USER_NICKNAME = #{userNickname},
+        USER_BIRTH = #{userBirth},
+        USER_GENDER = #{userGender},
+        USER_PHONE = #{userPhone},
+        USER_CARMODEL = #{userCarModel},
+        USER_ROLE = 'USER',
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{updatedId}
+        WHERE USER_EMAIL = #{userEmail}
+        AND EMAIL_VERIFIED = 'Y'
+    </update>
+
+    <update id="updateUserInfo" parameterType="com.recharge.user.vo.UserVO">
+        UPDATE TB_USER
+        SET
+            UPDATED_DATE = SYSDATE,
+            UPDATED_ID = #{userId}
+            <if test="userName != null">, USER_NAME = #{userName}</if>
+            <if test="userNickname != null">, USER_NICKNAME = #{userNickname} </if>
+            <if test="userPhone != null"> USER_PHONE = #{userPhone} </if>
+            <if test="userCarModel != null"> USER_CARMODEL = #{userCarModel} </if>
+        WHERE USER_ID = #{userId}
+    </update>
+    <update id="updateProfileUserPassword" parameterType="com.recharge.user.vo.UserVO">
+        UPDATE TB_USER
+        SET USER_PWD = #{userPwd, jdbcType=VARCHAR},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{updatedId, jdbcType=VARCHAR}
+        WHERE USER_ID = #{userId, jdbcType=VARCHAR}
+    </update>
+    <!-- 추가 -->
+    <update id="updateFcmToken" parameterType="map">
+        UPDATE TB_USER
+        SET FCM_TOKEN = #{token}
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <delete id="deleteUser" parameterType="String">
+        DELETE FROM TB_USER
+        WHERE USER_ID = #{userId}
+    </delete>
+
+    <select id="findBySocialId" parameterType="string" resultType="com.recharge.user.vo.UserVO">
+        SELECT *
+        FROM TB_USER
+        WHERE SOCIAL_ID = #{socialId}
+    </select>
+
+    <insert id="insertSocialUser" parameterType="com.recharge.user.vo.UserVO">
+        INSERT INTO TB_USER (
+        USER_ID,
+        USER_NAME,
+        USER_NICKNAME,
+        USER_EMAIL,
+        USER_BIRTH,    USER_ROLE,
+        SOCIAL_TYPE,
+        SOCIAL_ID,
+        CREATE_DATE,
+        UPDATED_DATE,
+        EMAIL_VERIFIED
+        ) VALUES (
+        #{userId},
+        #{userName},
+        #{userNickname},
+        #{userEmail},
+        '19000101',    'USER',
+        'KAKAO',
+        #{socialId},
+        SYSDATE,
+        SYSDATE,
+        'Y'
+        )
+    </insert>
+</mapper>

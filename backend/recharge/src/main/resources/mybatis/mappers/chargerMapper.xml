@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.charger.dao.ChargerDAO">
+
+    <!-- 존재 여부 확인 -->
+    <select id="existsCharger" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_CHARGER
+        WHERE STATION_ID = #{stationId}
+        AND CHARGER_ID = #{chargerId}
+    </select>
+
+    <!-- INSERT -->
+    <insert id="insertCharger" parameterType="com.recharge.charger.vo.ChargerVO">
+        INSERT INTO TB_CHARGER (
+        CHARGER_ID, STATION_ID, CHARGER_PROVIDER,
+        CHARGER_TOTAL, CHARGER_AVAILABLE,
+        CHARGER_TYPE, CHARGER_SPEED,
+        CHARGER_STATUS,
+        CREATE_DATE, CREATE_ID,
+        UPDATED_DATE, UPDATED_ID
+        )
+        VALUES (
+        #{chargerId}, #{stationId}, #{chargerProvider},
+        #{chargerTotal}, #{chargerAvailable},
+        #{chargerType}, #{chargerSpeed},
+        #{chargerStatus},
+        SYSDATE, 'SYSTEM',
+        SYSDATE, 'SYSTEM'
+        )
+    </insert>
+
+    <!-- UPDATE -->
+    <update id="updateCharger" parameterType="com.recharge.charger.vo.ChargerVO">
+        UPDATE TB_CHARGER
+        SET
+        CHARGER_PROVIDER = #{chargerProvider},
+        CHARGER_TOTAL = #{chargerTotal},
+        CHARGER_AVAILABLE = #{chargerAvailable},
+        CHARGER_TYPE = #{chargerType},
+        CHARGER_SPEED = #{chargerSpeed},
+        CHARGER_STATUS = #{chargerStatus},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = 'SYSTEM'
+        WHERE STATION_ID = #{stationId}
+        AND CHARGER_ID = #{chargerId}
+    </update>
+
+</mapper>

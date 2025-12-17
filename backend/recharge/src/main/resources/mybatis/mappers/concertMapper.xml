@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.music.dao.ConcertDAO">
+
+    <insert id="insertConcert" parameterType="ConcertVO">
+        <selectKey keyProperty="concertId" order="BEFORE" resultType="long">
+            SELECT SEQ_CONCERT.NEXTVAL FROM dual
+        </selectKey>
+        INSERT INTO TB_CONCERT (
+        CONCERT_ID,
+        TITLE,
+        POSTER,
+        START_DATE,
+        END_DATE,
+        CREATE_DATE
+        ) VALUES (
+        #{concertId},
+        #{title},
+        #{poster},
+        #{startDate},
+        #{endDate},
+        SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteAllConcerts">
+        DELETE FROM TB_CONCERT
+    </delete>
+
+    <select id="selectTopConcerts" resultType="ConcertVO">
+        SELECT *
+        FROM TB_CONCERT
+        ORDER BY START_DATE
+        FETCH FIRST 5 ROWS ONLY
+    </select>
+
+</mapper>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.station.dao.StationDAO">
+
+    <!-- MERGE 충전소 저장 -->
+    <insert id="mergeStation">
+        MERGE INTO TB_STATION s
+        USING (
+        SELECT #{stationId} AS STATION_ID FROM dual
+        ) d
+        ON (s.STATION_ID = d.STATION_ID)
+        WHEN MATCHED THEN
+        UPDATE SET
+        STATION_NAME = #{stationName},
+        STATION_LATITUDE = #{stationLatitude},
+        STATION_LONGITUDE = #{stationLongitude},
+        STATION_ADDRESS = #{stationAddress},
+        STATION_ADDRESS_DETAIL = #{stationAddressDetail},
+        STATION_PARKING_FREE = #{stationParkingFree},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = 'ADMIN'
+        WHEN NOT MATCHED THEN
+        INSERT (
+        STATION_ID,
+        STATION_NAME,
+        STATION_LATITUDE,
+        STATION_LONGITUDE,
+        STATION_ADDRESS,
+        STATION_ADDRESS_DETAIL,
+        STATION_PARKING_FREE,
+        CREATE_DATE,
+        CREATE_ID
+        )
+        VALUES (
+        #{stationId},
+        #{stationName},
+        #{stationLatitude},
+        #{stationLongitude},
+        #{stationAddress},
+        #{stationAddressDetail},
+        #{stationParkingFree},
+        SYSDATE,
+        'ADMIN'
+        )
+    </insert>
+
+
+    <!-- 🚀 반경 + 충전기 정보 통합 검색 -->
+    <select id="getStationsByDistance"
+            parameterType="map"
+            resultType="com.recharge.station.vo.StationVO">
+
+        SELECT
+        s.STATION_ID AS stationId,
+        s.STATION_NAME AS stationName,
+        s.STATION_LATITUDE AS stationLatitude,
+        s.STATION_LONGITUDE AS stationLongitude,
+        s.STATION_ADDRESS AS stationAddress,
+        s.STATION_ADDRESS_DETAIL AS stationAddressDetail,
+        s.STATION_PARKING_FREE AS stationParkingFree,
+        s.CREATE_DATE AS createDate,
+        s.CREATE_ID AS createId,
+        s.UPDATED_DATE AS updatedDate,
+        s.UPDATED_ID AS updatedId,
+
+        (
+        6371 * ACOS(
+        COS(#{lat} * (ACOS(-1) / 180)) *
+        COS(s.STATION_LATITUDE * (ACOS(-1) / 180)) *
+        COS((s.STATION_LONGITUDE - #{lng}) * (ACOS(-1) / 180)) +
+        SIN(#{lat} * (ACOS(-1) / 180)) *
+        SIN(s.STATION_LATITUDE * (ACOS(-1) / 180))
+        )
+        ) AS distance,
+
+        NVL(COUNT(c.CHARGER_ID), 0) AS chargerTotal,
+        NVL(SUM(NVL(c.CHARGER_AVAILABLE, 0)), 0) AS chargerAvailable,
+
+        LISTAGG(NVL(c.CHARGER_TYPE, '알수없음'), ', ')
+        WITHIN GROUP (ORDER BY c.CHARGER_TYPE) AS chargerTypes,
+
+        LISTAGG(NVL(c.CHARGER_SPEED, 0), ', ')
+        WITHIN GROUP (ORDER BY c.CHARGER_SPEED) AS chargerSpeeds,
+
+        LISTAGG(NVL(c.CHARGER_PROVIDER, '알수없음'), ', ')
+        WITHIN GROUP (ORDER BY c.CHARGER_PROVIDER) AS chargerProviders
+
+        FROM TB_STATION s
+        LEFT JOIN TB_CHARGER c
+        ON s.STATION_ID = c.STATION_ID
+
+        WHERE
+        s.STATION_LATITUDE IS NOT NULL
+        AND s.STATION_LONGITUDE IS NOT NULL
+        AND (
+        6371 * ACOS(
+        COS(#{lat} * (ACOS(-1) / 180)) *
+        COS(s.STATION_LATITUDE * (ACOS(-1) / 180)) *
+        COS((s.STATION_LONGITUDE - #{lng}) * (ACOS(-1) / 180)) +
+        SIN(#{lat} * (ACOS(-1) / 180)) *
+        SIN(s.STATION_LATITUDE * (ACOS(-1) / 180))
+        )
+        ) &lt;= #{radiusKm}
+
+        GROUP BY
+        s.STATION_ID,
+        s.STATION_NAME,
+        s.STATION_LATITUDE,
+        s.STATION_LONGITUDE,
+        s.STATION_ADDRESS,
+        s.STATION_ADDRESS_DETAIL,
+        s.STATION_PARKING_FREE,
+        s.CREATE_DATE,
+        s.CREATE_ID,
+        s.UPDATED_DATE,
+        s.UPDATED_ID
+
+        ORDER BY distance ASC
+    </select>
+
+</mapper>

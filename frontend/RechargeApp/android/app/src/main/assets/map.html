@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Kakao Map</title>
+
+  <!-- Kakao Map SDK -->
+  <script 
+    type="text/javascript" 
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9f0afa8c53c84fd47bfff12d39ef432f">
+  </script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <script>
+
+    let currentMarker = null;
+    let currentCircle = null;
+
+    const seoulStation = new kakao.maps.LatLng(37.554722, 126.970833);
+    const map = new kakao.maps.Map(document.getElementById("map"), {
+      center: seoulStation,
+      level: 5,
+    });
+
+    /* 🔥 충전소 마커 관련 */
+    let stationMarkers = [];
+    let selectedMarker = null;
+    let markerImages = {
+      default: null,
+      selected: null,
+    };
+
+    function loadMarkerImages() {
+      markerImages.default = new kakao.maps.MarkerImage(
+        "file:///android_asset/ev-marker.svg",
+        new kakao.maps.Size(36, 36),
+        { offset: new kakao.maps.Point(18, 36) }
+      );
+
+      markerImages.selected = new kakao.maps.MarkerImage(
+        "file:///android_asset/ev-marker-selected.svg",
+        new kakao.maps.Size(36, 36),
+        { offset: new kakao.maps.Point(18, 36) }
+      );
+    }
+    loadMarkerImages();
+
+    function clearStationMarkers() {
+      stationMarkers.forEach(m => m.setMap(null));
+      stationMarkers = [];
+    }
+
+    function addStationMarkers(stations) {
+      clearStationMarkers();
+
+      stations.forEach(st => {
+        const pos = new kakao.maps.LatLng(st.stationLatitude, st.stationLongitude);
+
+        const marker = new kakao.maps.Marker({
+          position: pos,
+          map,
+          image: markerImages.default,
+        });
+
+        marker.stationId = st.stationId;
+
+        kakao.maps.event.addListener(marker, "click", () => {
+          if (selectedMarker) {
+            selectedMarker.setImage(markerImages.default);
+          }
+          marker.setImage(markerImages.selected);
+          selectedMarker = marker;
+
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({
+              type: "markerClick",
+              stationId: st.stationId,
+            })
+          );
+        });
+
+        stationMarkers.push(marker);
+      });
+    }
+
+
+    /* 🎯 현재 위치 마커 생성 */
+    function createCurrentLocationMarker() {
+      const size = 26;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+
+      const ctx = canvas.getContext("2d");
+
+      // 하얀 원
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+
+      // 빨간 점
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2 - 7, 0, Math.PI * 2);
+      ctx.fillStyle = "#FF4E4E";
+      ctx.fill();
+
+      return new kakao.maps.MarkerImage(
+        canvas.toDataURL(),
+        new kakao.maps.Size(size, size),
+        { offset: new kakao.maps.Point(size / 2, size / 2) }
+      );
+    }
+
+
+    // 📌 RN → HTML 메시지 처리
+    document.addEventListener("message", function (e) {
+      let msg = e.data;
+
+      try { msg = JSON.parse(msg); } catch {}
+
+      if (msg.type === "init" || msg.type === "moveTo") {
+        const newPos = new kakao.maps.LatLng(msg.lat, msg.lng);
+
+        map.panTo(newPos);
+
+        if (currentMarker) currentMarker.setMap(null);
+        if (currentCircle) currentCircle.setMap(null);
+
+        currentMarker = new kakao.maps.Marker({
+          position: newPos,
+          image: createCurrentLocationMarker(),
+          map: map,
+        });
+
+        currentCircle = new kakao.maps.Circle({
+          center: newPos,
+          radius: 500,
+          strokeWeight: 1,
+          strokeColor: '#4A90E2',
+          strokeOpacity: 0.5,
+          fillColor: '#4A90E2',
+          fillOpacity: 0.15
+        });
+
+        currentCircle.setMap(map);
+      }
+
+      // 🔥 충전소 마커 표시
+      if (msg.type === "addStations") {
+        addStationMarkers(msg.stations);
+      }
+
+      if (msg === "zoomIn") map.setLevel(map.getLevel() - 1);
+      if (msg === "zoomOut") map.setLevel(map.getLevel() + 1);
+    });
+
+
+    // iOS 지원
+    window.addEventListener("message", function (e) {
+      const msg = e.data;
+
+      if (msg === "zoomIn") map.setLevel(map.getLevel() - 1);
+      if (msg === "zoomOut") map.setLevel(map.getLevel() + 1);
+    });
+
+  </script>
+</body>
+</html>

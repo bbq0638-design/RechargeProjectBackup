@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.userfeed.dao.UserFeedDAO">
+    <select id="selectUserFeed" parameterType="string" resultType="UserFeedVO">
+        SELECT
+        uf.USER_ID,
+        u.USER_NICKNAME,
+        uf.TOTAL_COUNT,
+        uf.TOTAL_FOLLOWER,
+        uf.TOTAL_FOLLOWING,
+        uf.CREATE_DATE,
+        uf.CREATE_ID,
+        uf.UPDATED_DATE,
+        uf.UPDATED_ID
+        FROM TB_USER_FEED uf
+        JOIN TB_USER u ON uf.USER_ID = u.USER_ID
+        WHERE uf.USER_ID = #{userId}
+    </select>
+
+    <select id="countUserPosts" parameterType="string" resultType="int">
+        SELECT
+            (SELECT COUNT(*)
+            FROM TB_MOVIE_POST
+            WHERE CREATE_ID = #{userId})
+        +
+            (SELECT COUNT(*)
+            FROM TB_MUSIC_POST
+            WHERE CREATE_ID = #{userId})
+        AS TOTAL_COUNT
+        FROM DUAL
+    </select>
+
+    <update id="updateTotalCount">
+        UPDATE TB_USER_FEED
+        SET TOTAL_COUNT = #{totalCount},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{userId}
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <insert id="insertUserFeed">
+        INSERT INTO TB_USER_FEED (
+        USER_ID, TOTAL_COUNT, TOTAL_FOLLOWER, TOTAL_FOLLOWING,
+        CREATE_DATE, CREATE_ID, UPDATED_DATE, UPDATED_ID
+        ) VALUES (
+        #{userId}, 0, 0, 0,
+        SYSDATE, #{userId}, SYSDATE, #{userId}
+        )
+    </insert>
+
+
+    <!-- 🔼 팔로워 +1 (상대방) -->
+    <update id="increaseFollower">
+        UPDATE TB_USER_FEED
+        SET TOTAL_FOLLOWER = TOTAL_FOLLOWER + 1,
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{updatedId}
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <!-- 🔽 팔로워 -1 (상대방) -->
+    <update id="decreaseFollower">
+        UPDATE TB_USER_FEED
+        SET TOTAL_FOLLOWER = TOTAL_FOLLOWER - 1,
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{updatedId}
+        WHERE USER_ID = #{userId}
+        AND TOTAL_FOLLOWER > 0
+    </update>
+
+    <!-- 🔼 팔로잉 +1 (나) -->
+    <update id="increaseFollowing">
+        UPDATE TB_USER_FEED
+        SET TOTAL_FOLLOWING = TOTAL_FOLLOWING + 1,
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{updatedId}
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <!-- 🔽 팔로잉 -1 (나) -->
+    <update id="decreaseFollowing">
+        UPDATE TB_USER_FEED
+        SET TOTAL_FOLLOWING = TOTAL_FOLLOWING - 1,
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{updatedId}
+        WHERE USER_ID = #{userId}
+        AND TOTAL_FOLLOWING > 0
+    </update>
+
+</mapper>

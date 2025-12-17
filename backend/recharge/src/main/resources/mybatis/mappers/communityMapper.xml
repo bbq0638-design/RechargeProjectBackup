@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.community.dao.CommunityDAO">
+
+    <select id="selectCategoryList" resultType="com.recharge.community.vo.CommunityVO">
+        SELECT
+            COMMON_CATEGORY_ID AS categoryId,
+            COMMON_CATEGORY_NAME AS categoryName,
+            COMMON_CATEGORY_CODE AS categoryCode
+        FROM
+            TB_COMMON_CATEGORY
+        WHERE
+            COMMON_CATEGORY_SYSTEM = 'COMMUNITY'
+            AND COMMON_CATEGORY_IS_ACTIVE = 'Y'
+        ORDER BY
+            COMMON_CATEGORY_ID ASC
+    </select>
+
+    <insert id="insertPost" parameterType="com.recharge.community.vo.CommunityVO">
+        INSERT INTO TB_COMMUNITY (
+            COMMUNITY_POST_ID,
+            USER_ID,
+            COMMUNITY_TITLE,
+            COMMUNITY_CONTENT,
+            CATEGORY_CODE,
+            COMMUNITY_VIEW_COUNT,
+            COMMUNITY_LIKE_COUNT,
+            COMMUNITY_IMAGE_DATA,
+            CREATE_DATE,
+            CREATE_ID,
+            UPDATED_DATE,
+            UPDATED_ID
+        ) VALUES (
+            SEQ_COMMUNITY_POST_ID.NEXTVAL,
+            #{userId},
+            #{communityTitle},
+            #{communityContent},
+            #{categoryCode},
+            0,
+            0,
+            #{communityImageData, jdbcType=BLOB},
+            SYSDATE,
+            #{userId},
+            SYSDATE,
+            'SYSTEM'
+        )
+    </insert>
+
+    <resultMap id="imageMap" type="com.recharge.community.vo.CommunityVO">
+        <result property="communityImageData" column="COMMUNITY_IMAGE_DATA" jdbcType="BLOB" typeHandler="org.apache.ibatis.type.BlobTypeHandler"/>
+    </resultMap>
+
+    <select id="selectCommunityImage" parameterType="int" resultMap="imageMap">
+        SELECT COMMUNITY_IMAGE_DATA
+        FROM TB_COMMUNITY
+        WHERE COMMUNITY_POST_ID = #{postId}
+    </select>
+
+    <select id="selectPostList" resultType="com.recharge.community.vo.CommunityVO">
+        SELECT
+            C.COMMUNITY_POST_ID AS communityPostId,
+            C.COMMUNITY_TITLE AS communityTitle,
+            C.COMMUNITY_CONTENT AS communityContent,
+            C.USER_ID AS userId,
+            C.COMMUNITY_LIKE_COUNT AS communityLikeCount,
+            U.USER_NICKNAME AS userNickname,
+
+        --날짜 포메팅
+            TO_CHAR(C.CREATE_DATE, 'YYYY-MM-DD HH24:MI') AS createDate,
+        --카테고리 코드('REVIEW')
+            C.CATEGORY_CODE AS categoryCode,
+        --카테고리 한글 이름 ('충전소 후기')  JOIN
+            CC.COMMON_CATEGORY_NAME AS categoryName
+        FROM TB_COMMUNITY C
+        LEFT JOIN TB_USER U ON C.USER_ID = U.USER_ID
+        LEFT JOIN TB_COMMON_CATEGORY CC
+            ON C.CATEGORY_CODE = CC.COMMON_CATEGORY_CODE
+            AND CC.COMMON_CATEGORY_SYSTEM = 'COMMUNITY'
+        ORDER BY C.CREATE_DATE DESC
+    </select>
+
+    <update id="updateViewCount" parameterType="int">
+        UPDATE TB_COMMUNITY
+        SET COMMUNITY_VIEW_COUNT = COMMUNITY_VIEW_COUNT +1
+        WHERE COMMUNITY_POST_ID = #{postId}
+    </update>
+
+    <select id="selectPostDetail" resultType="com.recharge.community.vo.CommunityVO">
+        SELECT
+            C.COMMUNITY_POST_ID AS communityPostId,
+            C.COMMUNITY_TITLE AS communityTitle,
+            C.COMMUNITY_CONTENT AS communityContent,
+            C.COMMUNITY_VIEW_COUNT AS communityViewCount,
+            C.COMMUNITY_LIKE_COUNT AS communityLikeCount,
+            TO_CHAR(C.CREATE_DATE, 'YYYY-MM-DD HH24:MI') AS createDate,
+            C.CATEGORY_CODE AS categoryCode,
+            CC.COMMON_CATEGORY_NAME AS categoryName,
+            C.USER_ID AS userId,
+        --화면 표시용 닉네임
+            U.USER_NICKNAME AS userNickname,
+        CASE WHEN C.COMMUNITY_IMAGE_DATA IS NOT NULL THEN 'Y'
+        ELSE 'N'
+        END AS hasImage,
+        (SELECT COUNT(*)
+            FROM TB_COMMUNITY_LIKE L
+            WHERE L.COMMUNITY_POST_ID = C.COMMUNITY_POST_ID
+            AND L.USER_ID = #{userId}) as liked
+
+        FROM TB_COMMUNITY C
+        LEFT JOIN TB_USER U ON C.USER_ID = U.USER_ID
+        LEFT JOIN TB_COMMON_CATEGORY CC
+            ON C.CATEGORY_CODE = CC.COMMON_CATEGORY_CODE
+            AND CC.COMMON_CATEGORY_SYSTEM = 'COMMUNITY'
+        WHERE C.COMMUNITY_POST_ID = #{postId}
+    </select>
+
+    <delete id="deletePost" parameterType="int">
+        DELETE FROM TB_COMMUNITY
+        WHERE COMMUNITY_POST_ID = #{postId}
+    </delete>
+
+    <update id="updatePost" parameterType="com.recharge.community.vo.CommunityVO">
+        UPDATE TB_COMMUNITY
+        SET
+            COMMUNITY_TITLE = #{communityTitle},
+            COMMUNITY_CONTENT = #{communityContent},
+            CATEGORY_CODE = #{categoryCode},
+            UPDATED_DATE = SYSDATE
+            <if test="communityImageData != null">
+                , COMMUNITY_IMAGE_DATA = #{communityImageData, jdbcType=BLOB}
+            </if>
+        WHERE COMMUNITY_POST_ID = #{communityPostId}
+    </update>
+
+    <select id="selectPostById" resultType="com.recharge.community.vo.CommunityVO">
+        SELECT
+            C.COMMUNITY_POST_ID AS communityPostId,
+            C.COMMUNITY_TITLE AS communityTitle,
+            C.COMMUNITY_CONTENT AS communityContent,
+            C.USER_ID AS userID,
+            C.COMMUNITY_LIKE_COUNT AS communityLikeCount,
+            C.COMMUNITY_VIEW_COUNT AS communityViewCount,
+            TO_CHAR(C.CREATE_DATE, 'YYYY-MM-DD HH24:MI') AS createDate,
+
+            --내가 좋아요 눌렀는지 체크
+            (SELECT COUNT(*)
+                FROM TB_COMMUNITY_LIKE L
+                WHERE L.COMMUNITY_POST_ID = C.COMMUNITY_POST_ID
+                AND L.USER_ID = #{userId}) AS liked,
+            '자유' AS categoryName
+        FROM TB_COMMUNITY C
+        WHERE C.COMMUNITY_POST_ID = #{postId}
+    </select>
+
+    <select id="checkLike" resultType="int">
+        SELECT COUNT(*) FROM TB_COMMUNITY_LIKE
+        WHERE COMMUNITY_POST_ID = #{postId} AND USER_ID = #{userId}
+    </select>
+
+    <insert id="insertLike">
+        INSERT INTO TB_COMMUNITY_LIKE (LIKE_ID, COMMUNITY_POST_ID, USER_ID)
+        VALUES (SEQ_COMMUNITY_LIKE.NEXTVAL, #{postId}, #{userId})
+    </insert>
+
+    <delete id="deleteLike">
+        DELETE FROM TB_COMMUNITY_LIKE
+        WHERE COMMUNITY_POST_ID = #{postId} AND USER_ID = #{userId}
+    </delete>
+
+    <update id="increaseLikeCount">
+        UPDATE TB_COMMUNITY SET COMMUNITY_LIKE_COUNT = COMMUNITY_LIKE_COUNT + 1
+        WHERE COMMUNITY_POST_ID = #{postId}
+    </update>
+
+    <update id="decreaseLikeCount">
+        UPDATE TB_COMMUNITY SET COMMUNITY_LIKE_COUNT = COMMUNITY_LIKE_COUNT - 1
+        WHERE COMMUNITY_POST_ID = #{postId}
+    </update>
+
+    <select id="getLikeCount" resultType="int">
+        SELECT COMMUNITY_LIKE_COUNT FROM TB_COMMUNITY WHERE COMMUNITY_POST_ID = #{postId}
+    </select>
+</mapper>

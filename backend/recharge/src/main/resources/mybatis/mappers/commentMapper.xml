@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.recharge.comment.dao.CommentDAO">
+
+    <insert id="insertComment" parameterType="com.recharge.comment.vo.CommentVO">
+        INSERT INTO TB_COMMENT (
+            COMMENT_ID,
+            TARGET_TYPE,
+            TARGET_ID,
+            USER_ID,
+            COMMENT_TEXT,
+            CREATE_DATE,
+            CREATE_ID,
+            UPDATED_DATE,
+            UPDATED_ID
+        ) VALUES (
+            SEQ_COMMENT_ID.NEXTVAL,
+            #{targetType},
+            #{targetId},
+            #{userId},
+            #{commentText},
+            SYSDATE,
+            #{userId},
+            SYSDATE,
+            #{userId}
+        )
+    </insert>
+
+    <select id="getCommentList" parameterType="com.recharge.comment.vo.CommentVO" resultType="com.recharge.comment.vo.CommentVO">
+        SELECT
+            C.COMMENT_ID,
+            C.TARGET_TYPE,
+            C.TARGET_ID,
+            C.USER_ID,
+            C.COMMENT_TEXT,
+            C.CREATE_DATE,
+            U.USER_NICKNAME
+        FROM TB_COMMENT C
+        LEFT JOIN TB_USER U ON C.USER_ID = U.USER_ID
+        WHERE C.TARGET_TYPE = #{targetType}
+        AND C. TARGET_ID = #{targetId}
+        ORDER BY C.CREATE_DATE DESC
+    </select>
+
+    <delete id="deleteComment" parameterType="com.recharge.comment.vo.CommentVO">
+        DELETE FROM TB_COMMENT
+        WHERE COMMENT_ID = #{commentId}
+            AND (USER_ID = #{userId} OR #{userRole} = 'ADMIN')
+    </delete>
+
+    <update id="updateComment" parameterType="com.recharge.comment.vo.CommentVO">
+        UPDATE TB_COMMENT
+        SET COMMENT_TEXT = #{commentText},
+            UPDATED_DATE = SYSDATE,
+            UPDATED_ID = #{userId}
+        WHERE COMMENT_ID = #{commentId}
+        AND USER_ID = #{userId}
+    </update>
+</mapper>

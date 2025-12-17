@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.recharge.place.dao.PlaceDAO">
+
+    <!-- 🟢 새로운 장소 INSERT -->
+    <insert id="insertPlace" parameterType="com.recharge.place.vo.PlaceVO">
+        <selectKey keyProperty="placeId" resultType="long" order="BEFORE">
+            SELECT SEQ_PLACE_ID.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO TB_PLACE (
+        PLACE_ID,
+        PLACE_NAME,
+        KAKAO_PLACE_ID,
+        CATEGORY_ID,
+        PLACE_ADDRESS,
+        PLACE_ADDRESS_DETAIL,
+        PLACE_PHONE,
+        PLACE_LATITUDE,
+        PLACE_LONGITUDE,
+        CREATE_DATE,
+        CREATE_ID
+        )
+        VALUES (
+        #{placeId},
+        #{placeName},
+        #{kakaoPlaceId},
+        #{categoryId},
+        #{placeAddress},
+        #{placeAddressDetail},
+        #{placePhone},
+        #{placeLatitude},
+        #{placeLongitude},
+        SYSDATE,
+        #{createId}
+        )
+    </insert>
+
+
+    <!-- 🔍 기존 장소 중복 여부 체크 -->
+    <select id="existsByKakaoPlaceId" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_PLACE
+        WHERE KAKAO_PLACE_ID = #{kakaoPlaceId}
+    </select>
+
+
+
+    <!-- 🟡 반경기준 장소 조회 (기본 1km) -->
+    <select id="findPlaceByLocation" resultType="com.recharge.place.vo.PlaceVO">
+        SELECT *
+        FROM (
+        SELECT
+        P.PLACE_ID,
+        P.PLACE_NAME,
+        P.CATEGORY_ID,
+        C.COMMON_CATEGORY_NAME AS categoryName,
+        C.COMMON_CATEGORY_CODE AS categoryCode,
+        P.PLACE_ADDRESS,
+        P.PLACE_ADDRESS_DETAIL,
+        P.PLACE_PHONE,
+        P.PLACE_LATITUDE,
+        P.PLACE_LONGITUDE,
+        P.CREATE_DATE,
+        P.CREATE_ID,
+        P.UPDATED_DATE,
+        P.UPDATED_ID,
+        (
+        6371 *
+        ACOS(
+        COS(#{lat} * (ACOS(-1)/180)) *
+        COS(P.PLACE_LATITUDE * (ACOS(-1)/180)) *
+        COS((P.PLACE_LONGITUDE - #{lng}) * (ACOS(-1)/180)) +
+        SIN(#{lat} * (ACOS(-1)/180)) *
+        SIN(P.PLACE_LATITUDE * (ACOS(-1)/180))
+        )
+        ) AS distance
+
+        FROM TB_PLACE P
+        LEFT JOIN TB_COMMON_CATEGORY C
+        ON P.CATEGORY_ID = C.COMMON_CATEGORY_ID
+
+        WHERE
+        P.PLACE_LATITUDE BETWEEN (#{lat} - (#{radius}/111))
+        AND (#{lat} + (#{radius}/111))
+        AND
+        P.PLACE_LONGITUDE BETWEEN (#{lng} - (#{radius}/111))
+        AND (#{lng} + (#{radius}/111))
+        )
+        WHERE distance &lt;= #{radius}
+        ORDER BY distance ASC
+    </select>
+
+</mapper>
