@@ -38,34 +38,38 @@
           AND FOLLOWING_ID = #{followingId}
     </delete>
 
-    <select id="getFollowerList" parameterType="String" resultType="com.recharge.follow.vo.FollowVO">
+    <select id="getFollowerList" parameterType="map" resultType="com.recharge.follow.vo.FollowVO">
         SELECT
         f.FOLLOW_ID AS followId,
         f.FOLLOWER_ID AS followerId,
         f.FOLLOWING_ID AS followingId,
         u.USER_ID AS targetUserId,
         u.USER_NICKNAME AS userNickname,
-        f.CREATE_DATE AS createDate
+        -- 로그인한 유저(myUserId)가 이 사람(followerId)을 팔로우하고 있는지 체크
+        (SELECT COUNT(*) FROM TB_FOLLOW
+        WHERE FOLLOWER_ID = #{myUserId}
+        AND FOLLOWING_ID = f.FOLLOWER_ID) AS isFollowing
         FROM TB_FOLLOW f
-        JOIN TB_USER u
-        ON f.FOLLOWER_ID = u.USER_ID
-        WHERE f.FOLLOWING_ID = #{followingId}
+        JOIN TB_USER u ON f.FOLLOWER_ID = u.USER_ID
+        WHERE f.FOLLOWING_ID = #{targetUserId}
         ORDER BY f.CREATE_DATE DESC
     </select>
 
 
-    <select id="getFollowingList" parameterType="String" resultType="com.recharge.follow.vo.FollowVO">
+    <select id="getFollowingList" parameterType="map" resultType="com.recharge.follow.vo.FollowVO">
         SELECT
         f.FOLLOW_ID AS followId,
         f.FOLLOWER_ID AS followerId,
         f.FOLLOWING_ID AS followingId,
         u.USER_ID AS targetUserId,
         u.USER_NICKNAME AS userNickname,
-        f.CREATE_DATE AS createDate
+        -- 내가 팔로우하는 사람(followingId)이 나(myUserId)를 팔로우하고 있는지 체크
+        (SELECT COUNT(*) FROM TB_FOLLOW
+        WHERE FOLLOWER_ID = f.FOLLOWING_ID
+        AND FOLLOWING_ID = #{myUserId}) AS isFollowing
         FROM TB_FOLLOW f
-        JOIN TB_USER u
-        ON f.FOLLOWING_ID = u.USER_ID
-        WHERE f.FOLLOWER_ID = #{followerId}
+        JOIN TB_USER u ON f.FOLLOWING_ID = u.USER_ID
+        WHERE f.FOLLOWER_ID = #{targetUserId}
         ORDER BY f.CREATE_DATE DESC
     </select>
 

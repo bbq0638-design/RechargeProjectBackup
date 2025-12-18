@@ -26,7 +26,7 @@
         TO_CHAR(CREATE_DATE, 'YYYY-MM-DD HH24:MI') AS createDate
         FROM TB_NOTIFICATION
         WHERE RECEIVER_ID = #{userId}
-        ORDER BY IS_READ ASC, CREATE_DATE DESC
+        AND IS_READ = 'N'  ORDER BY CREATE_DATE DESC
     </select>
 
     <update id="updateNotificationRead" parameterType="Long">

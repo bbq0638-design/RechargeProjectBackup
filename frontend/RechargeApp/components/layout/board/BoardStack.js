@@ -4,6 +4,7 @@ import BoardScreen from '../../../screens/board/BoardScreen';
 import BoardDetailScreen from '../../../screens/board/BoardDetailScreen';
 import BoardWriteScreen from '../../../screens/board/BoardWriteScreen';
 import Header from '../../layout/Header';
+import YourPageScreen from '../../../screens/mypage/YourPageScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +25,11 @@ export default function BoardStack() {
         name="BoardWrite"
         component={BoardWriteScreen}
         options={{header: props => <Header {...props} />}}
+      />
+      <Stack.Screen
+        name="YourPageScreen"
+        component={YourPageScreen}
+        options={{ header: props => <Header {...props} /> }}
       />
     </Stack.Navigator>
   );

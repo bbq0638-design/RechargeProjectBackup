@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, StyleSheet, Pressable} from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Button from '../../common/Button';
 
 export default function ProfileList({
@@ -21,7 +21,7 @@ export default function ProfileList({
         const isMe = String(targetUserId) === String(myUserId);
 
         return (
-          <View style={styles.row}>
+          <View key={targetUserId} style={styles.row}>
             {/* 닉네임 영역 */}
             <Pressable
               style={styles.nameBox}
@@ -44,13 +44,13 @@ export default function ProfileList({
 
               {!isMe && mode === 'follower' && (
                 <Button
-                  type={user.isFollowing ? 'cancel' : 'submit'}
-                  text={user.isFollowing ? '언팔로우' : '팔로우'}
+                  type={user.isFollowing > 0 ? 'cancel' : 'submit'}
+                  text={user.isFollowing > 0 ? '언팔로우' : '팔로우'}
                   width={110}
                   height={40}
                   borderRadius={20}
                   onPress={() =>
-                    user.isFollowing
+                    user.isFollowing > 0
                       ? onPressUnfollow(targetUserId)
                       : onPressFollow(targetUserId)
                   }

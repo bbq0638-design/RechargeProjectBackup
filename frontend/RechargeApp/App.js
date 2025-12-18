@@ -11,7 +11,7 @@ import BottomNavigation from './components/layout/BottomNavigation';
 import {navigationRef} from './components/layout/navigationRef';
 import api, { saveFcmToken } from './utils/api';
 
-// 백그라운드 메시지 핸들러
+// ★★★★백그라운드 메시지 핸들러
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('백그라운드/종료 상태에서 메시지 수신:', remoteMessage);
 
@@ -29,7 +29,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     importance: "high",
   });
 });
-
+// ★★★★
 LogBox.ignoreLogs([
   'new NativeEventEmitter', 
   'listener',
@@ -92,7 +92,7 @@ export default function App() {
       }
     }
   };
-
+  // ★★★★
   const handleNotificationPress = (data) => {
     if (!data) return;
     
@@ -123,6 +123,7 @@ export default function App() {
     }
   };
 
+  // ★★★★
   useEffect(() => {
     // 🔹 앱 시작 시 권한 요청 실행
     requestNotificationPermission();
@@ -164,7 +165,7 @@ export default function App() {
       if (storedUserId) {
         setUserId(storedUserId);
         
-        // [추가됨] 자동 로그인 시에도 FCM 토큰을 서버에 다시 저장합니다.
+        // ★★★★[추가됨] 자동 로그인 시에도 FCM 토큰을 서버에 다시 저장합니다.
         console.log('자동 로그인 감지: FCM 토큰 업데이트 시도');
         saveFcmToken(storedUserId); 
       }
@@ -183,7 +184,7 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
-  // 앱이 켜져 있을 때 알림 도착 처리 (FCM)
+  // ★★★★앱이 켜져 있을 때 알림 도착 처리 (FCM)
   useEffect(() => {
     const unsubscribe = messaging().onMessage(async remoteMessage => {
       console.log('앱 켜져있을 때 알림 도착!', remoteMessage);
@@ -204,7 +205,7 @@ export default function App() {
 
     return unsubscribe;
   }, []);
-
+  
   useEffect(() => {
     messaging().onNotificationOpenedApp(remoteMessage => {
       console.log('백그라운드에서 알림 클릭:', remoteMessage);

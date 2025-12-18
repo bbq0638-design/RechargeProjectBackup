@@ -7,6 +7,7 @@ import YourPageScreen from '../../../screens/mypage/YourPageScreen';
 import FollowScreen from '../../../screens/mypage/FollowScreen';
 import Header from '../Header';
 
+
 const Stack = createNativeStackNavigator();
 
 export default function MovieStackNavigation() {

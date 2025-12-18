@@ -19,4 +19,5 @@ public class FollowVO {
 
     private String targetUserId;   // 화면에서 필요한 유저ID
     private String userNickname;   // 조인해서 가져온 닉네임
+    private int isFollowing; // 0 또는 1 (맞팔 여부)
 }

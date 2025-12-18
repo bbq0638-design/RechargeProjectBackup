@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
@@ -148,7 +149,14 @@ public class UserController {
     }
 
     @PostMapping("/profile-pw")
-    public ResponseEntity<?>profilePw(@RequestBody UserVO user) {
+    public ResponseEntity<?> profilePw(@RequestBody UserVO user, Authentication authentication) {
+        // authentication에서 현재 로그인한 유저의 아이디를 꺼내옵니다.
+        String currentUserId = authentication.getName();
+
+        // 전달받은 user 객체에 아이디를 강제로 셋팅합니다.
+        user.setUserId(currentUserId);
+        user.setUpdatedId(currentUserId); // 수정자 아이디도 함께 셋팅
+
         boolean result = userService.updateProfilePW(user);
         return ResponseEntity.ok(result);
     }

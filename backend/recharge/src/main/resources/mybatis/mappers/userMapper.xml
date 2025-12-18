@@ -214,14 +214,15 @@
     <update id="updateUserInfo" parameterType="com.recharge.user.vo.UserVO">
         UPDATE TB_USER
         SET
-            UPDATED_DATE = SYSDATE,
-            UPDATED_ID = #{userId}
-            <if test="userName != null">, USER_NAME = #{userName}</if>
-            <if test="userNickname != null">, USER_NICKNAME = #{userNickname} </if>
-            <if test="userPhone != null"> USER_PHONE = #{userPhone} </if>
-            <if test="userCarModel != null"> USER_CARMODEL = #{userCarModel} </if>
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = #{userId}
+        <if test="userName != null">, USER_NAME = #{userName}</if>
+        <if test="userNickname != null">, USER_NICKNAME = #{userNickname} </if>
+        <if test="userPhone != null">, USER_PHONE = #{userPhone} </if>
+        <if test="userCarModel != null">, USER_CARMODEL = #{userCarModel} </if>
         WHERE USER_ID = #{userId}
     </update>
+
     <update id="updateProfileUserPassword" parameterType="com.recharge.user.vo.UserVO">
         UPDATE TB_USER
         SET USER_PWD = #{userPwd, jdbcType=VARCHAR},

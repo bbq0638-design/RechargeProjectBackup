@@ -43,10 +43,10 @@ export const checkFollow = async (followerId, followingId) => {
   }
 };
 
-export const getFollowingList = async followerId => {
+export const getFollowingList = async (followerId, myUserId) => {
   try {
     const res = await api.get('/follow/following', {
-      params: {followerId},
+      params: { followerId, myUserId },
     });
 
     return res.data;
@@ -56,10 +56,10 @@ export const getFollowingList = async followerId => {
   }
 };
 
-export const getFollowerList = async followingId => {
+export const getFollowerList = async (followingId, myUserId) => {
   try {
     const res = await api.get('/follow/follower', {
-      params: {followingId},
+      params: { followingId, myUserId },
     });
 
     return res.data;

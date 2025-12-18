@@ -12,9 +12,9 @@ public interface FollowService {
 
     boolean isFollowing(FollowVO vo);
 
-    List<FollowVO> getFollowingList(String followerId);
+    List<FollowVO> getFollowingList(String followerId, String myUserId); // myUserId 추가
 
-    List<FollowVO> getFollowerList(String followingId);
+    List<FollowVO> getFollowerList(String followingId, String myUserId); // myUserId 추가
 
 
 }

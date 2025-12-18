@@ -4,6 +4,7 @@ import com.recharge.follow.vo.FollowVO;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface FollowDAO {
@@ -14,7 +15,7 @@ public interface FollowDAO {
 
     int countFollow(FollowVO vo);
 
-    List<FollowVO> getFollowerList(String followingId);
+    List<FollowVO> getFollowerList(Map<String, Object> params); // ★ String -> Map 변경
 
-    List<FollowVO> getFollowingList(String followerId);
+    List<FollowVO> getFollowingList(Map<String, Object> params); // ★ String -> Map 변경
 }

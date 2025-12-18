@@ -3,6 +3,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import ChargerMainScreen from '../../../screens/charger/ChargerMainScreen';
 import ChargerDetailScreen from '../../../screens/charger/ChargerDetailScreen';
 import Header from '../../layout/Header';
+import YourPageScreen from '../../../screens/mypage/YourPageScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +20,12 @@ export default function ChargerStack() {
         component={ChargerDetailScreen}
         options={{header: props => <Header {...props} />}}
       />
+      <Stack.Screen
+        name="YourPageScreen"
+        component={YourPageScreen}
+        options={{ header: props => <Header {...props} /> }}
+      />
     </Stack.Navigator>
+    
   );
 }

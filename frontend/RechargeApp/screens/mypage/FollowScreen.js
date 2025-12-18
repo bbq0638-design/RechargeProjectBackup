@@ -48,25 +48,34 @@ export default function FollowScreen() {
     loadMyId();
   }, []);
 
-  /** ---------------------------------
-   * 🔥 팔로잉 / 팔로워 조회
-   * --------------------------------- */
   const fetchFollowing = async () => {
-    const data = await getFollowingList(targetUserId);
+    if (!targetUserId || !myUserId) return; // ★ myUserId가 없을 땐 호출하지 않음
+
+    // ★ getFollowingList에 myUserId 인자 추가!
+    const data = await getFollowingList(targetUserId, myUserId);
     setFollowingList(data);
   };
 
   const fetchFollower = async () => {
-    const data = await getFollowerList(targetUserId);
+    if (!targetUserId || !myUserId) return; // ★ myUserId가 없을 땐 호출하지 않음
+
+    // ★ getFollowerList에 myUserId 인자 추가!
+    const data = await getFollowerList(targetUserId, myUserId);
     setFollowerList(data);
   };
 
+  /** ---------------------------------
+   * 🔥 useEffect 수정
+   * --------------------------------- */
   useEffect(() => {
-    if (!targetUserId) return;
-    fetchFollowing();
-    fetchFollower();
-  }, [targetUserId]);
+    // targetUserId와 myUserId가 모두 로드되었을 때만 데이터를 불러옵니다.
+    if (targetUserId && myUserId) {
+      fetchFollowing();
+      fetchFollower();
+    }
+  }, [targetUserId, myUserId]); // ★ myUserId가 변경될 때도 트리거되도록 추가
 
+  
   /** ---------------------------------
    * 🔥 팔로우 / 언팔
    * --------------------------------- */

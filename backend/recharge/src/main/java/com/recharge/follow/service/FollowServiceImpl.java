@@ -12,102 +12,111 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
-public class FollowServiceImpl implements FollowService {
+    @Service
+    public class FollowServiceImpl implements FollowService {
 
-    @Autowired
-    private FollowDAO followDAO;
+        @Autowired
+        private FollowDAO followDAO;
 
-    @Autowired
-    private UserFeedDAO userFeedDAO;
+        @Autowired
+        private UserFeedDAO userFeedDAO;
 
-    // ★ 알림 서비스 주입
-    @Autowired
-    private NotificationService notificationService;
+        // ★ 알림 서비스 주입
+        @Autowired
+        private NotificationService notificationService;
 
-    @Override
-    @Transactional
-    public int insertFollow(FollowVO vo) {
+        @Override
+        @Transactional
+        public int insertFollow(FollowVO vo) {
 
-        // 1. 중복 팔로우 방지
-        if (followDAO.countFollow(vo) > 0) {
-            return 0;
+            // 1. 중복 팔로우 방지
+            if (followDAO.countFollow(vo) > 0) {
+                return 0;
+            }
+
+            // 2. 팔로우 insert
+            int result = followDAO.insertFollow(vo);
+            if (result == 0) return 0;
+
+            // 3. 상대방 팔로워 +1
+            Map<String, Object> followerParam = new HashMap<>();
+            followerParam.put("userId", vo.getFollowingId());
+            followerParam.put("updatedId", vo.getFollowerId());
+            userFeedDAO.increaseFollower(followerParam);
+
+            // 4. 내 팔로잉 +1
+            Map<String, Object> followingParam = new HashMap<>();
+            followingParam.put("userId", vo.getFollowerId());
+            followingParam.put("updatedId", vo.getFollowerId());
+            userFeedDAO.increaseFollowing(followingParam);
+
+
+            System.out.println(">>>> [디버깅] 팔로우 알림 전송 시작! sender: " + vo.getFollowerId()); // 이 로그가 찍혀야 함
+
+            try {
+                notificationService.sendNotification(
+                        vo.getFollowerId(),   // sender (나)
+                        "follow",             // targetType
+                        vo.getFollowingId(),  // targetId (상대방 ID)
+                        "FOLLOW"              // type
+                );
+            } catch (Exception e) {
+                System.err.println("팔로우 알림 전송 실패: " + e.getMessage());
+            }
+
+
+            return 1;
         }
 
-        // 2. 팔로우 insert
-        int result = followDAO.insertFollow(vo);
-        if (result == 0) return 0;
+        @Override
+        @Transactional
+        public int deleteFollow(FollowVO vo) {
 
-        // 3. 상대방 팔로워 +1
-        Map<String, Object> followerParam = new HashMap<>();
-        followerParam.put("userId", vo.getFollowingId());
-        followerParam.put("updatedId", vo.getFollowerId());
-        userFeedDAO.increaseFollower(followerParam);
+            // 1. 팔로우 상태 확인
+            if (followDAO.countFollow(vo) == 0) {
+                return 0;
+            }
 
-        // 4. 내 팔로잉 +1
-        Map<String, Object> followingParam = new HashMap<>();
-        followingParam.put("userId", vo.getFollowerId());
-        followingParam.put("updatedId", vo.getFollowerId());
-        userFeedDAO.increaseFollowing(followingParam);
+            // 2. 팔로우 delete
+            int result = followDAO.deleteFollow(vo);
+            if (result == 0) return 0;
 
+            // 3. 상대방 팔로워 -1
+            Map<String, Object> followerParam = new HashMap<>();
+            followerParam.put("userId", vo.getFollowingId());
+            followerParam.put("updatedId", vo.getFollowerId());
+            userFeedDAO.decreaseFollower(followerParam);
 
-        System.out.println(">>>> [디버깅] 팔로우 알림 전송 시작! sender: " + vo.getFollowerId()); // 이 로그가 찍혀야 함
+            // 4. 내 팔로잉 -1
+            Map<String, Object> followingParam = new HashMap<>();
+            followingParam.put("userId", vo.getFollowerId());
+            followingParam.put("updatedId", vo.getFollowerId());
+            userFeedDAO.decreaseFollowing(followingParam);
 
-        try {
-            notificationService.sendNotification(
-                    vo.getFollowerId(),   // sender (나)
-                    "follow",             // targetType
-                    vo.getFollowingId(),  // targetId (상대방 ID)
-                    "FOLLOW"              // type
-            );
-        } catch (Exception e) {
-            System.err.println("팔로우 알림 전송 실패: " + e.getMessage());
+            return 1;
         }
 
-
-        return 1;
-    }
-
-    @Override
-    @Transactional
-    public int deleteFollow(FollowVO vo) {
-
-        // 1. 팔로우 상태 확인
-        if (followDAO.countFollow(vo) == 0) {
-            return 0;
+        @Override
+        public boolean isFollowing(FollowVO vo) {
+            return followDAO.countFollow(vo) > 0;
         }
 
-        // 2. 팔로우 delete
-        int result = followDAO.deleteFollow(vo);
-        if (result == 0) return 0;
+        // FollowServiceImpl.java
 
-        // 3. 상대방 팔로워 -1
-        Map<String, Object> followerParam = new HashMap<>();
-        followerParam.put("userId", vo.getFollowingId());
-        followerParam.put("updatedId", vo.getFollowerId());
-        userFeedDAO.decreaseFollower(followerParam);
+        @Override
+        public List<FollowVO> getFollowingList(String followerId, String myUserId) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("targetUserId", followerId); // 쿼리문 내의 targetUserId와 매칭
+            params.put("myUserId", myUserId);
+            return followDAO.getFollowingList(params); // DAO 메서드도 Map을 받도록 수정 필요
+        }
 
-        // 4. 내 팔로잉 -1
-        Map<String, Object> followingParam = new HashMap<>();
-        followingParam.put("userId", vo.getFollowerId());
-        followingParam.put("updatedId", vo.getFollowerId());
-        userFeedDAO.decreaseFollowing(followingParam);
+        @Override
+        public List<FollowVO> getFollowerList(String followingId, String myUserId) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("targetUserId", followingId);
+            params.put("myUserId", myUserId);
+            return followDAO.getFollowerList(params);
+        }
 
-        return 1;
     }
-
-    @Override
-    public boolean isFollowing(FollowVO vo) {
-        return followDAO.countFollow(vo) > 0;
-    }
-
-    @Override
-    public List<FollowVO> getFollowingList(String followerId) {
-        return followDAO.getFollowingList(followerId);
-    }
-
-    @Override
-    public List<FollowVO> getFollowerList(String followingId) {
-        return followDAO.getFollowerList(followingId);
-    }
-}

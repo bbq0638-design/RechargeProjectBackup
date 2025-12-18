@@ -7,6 +7,7 @@ import SettingAppInfoScreen from '../../../screens/setting/SettingAppInfoScreen'
 import ModifyProfileScreen from '../../../screens/auth/ModifyProfileScreen';
 import ProfileModifyPwdScreen from '../../../screens/auth/ProfileModifyPwdScreen';
 import Header from '../../layout/Header';
+import YourPageScreen from '../../../screens/mypage/YourPageScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -43,6 +44,11 @@ export default function SettingStack( { setIsLoggedIn } ) {
         name="ResetPwd"
         component={ProfileModifyPwdScreen}
         options={{header: props => <Header {...props} />}}
+      />
+      <Stack.Screen
+        name="YourPageScreen"
+        component={YourPageScreen}
+        options={{ header: props => <Header {...props} /> }}
       />
     </Stack.Navigator>
   );

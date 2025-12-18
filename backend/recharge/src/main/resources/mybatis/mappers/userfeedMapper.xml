@@ -3,36 +3,32 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.recharge.userfeed.dao.UserFeedDAO">
-    <select id="selectUserFeed" parameterType="string" resultType="UserFeedVO">
+
+    <select id="selectUserFeed" parameterType="string" resultType="com.recharge.userfeed.vo.UserFeedVO">
         SELECT
-        uf.USER_ID,
-        u.USER_NICKNAME,
-        uf.TOTAL_COUNT,
-        uf.TOTAL_FOLLOWER,
-        uf.TOTAL_FOLLOWING,
-        uf.CREATE_DATE,
-        uf.CREATE_ID,
-        uf.UPDATED_DATE,
-        uf.UPDATED_ID
+        uf.USER_ID AS userId,
+        u.USER_NICKNAME AS userNickname,
+        uf.TOTAL_COUNT AS totalCount,
+        uf.TOTAL_FOLLOWER AS totalFollower,
+        uf.TOTAL_FOLLOWING AS totalFollowing,
+        uf.CREATE_DATE AS createDate,
+        uf.CREATE_ID AS createId,
+        uf.UPDATED_DATE AS updatedDate,
+        uf.UPDATED_ID AS updatedId
         FROM TB_USER_FEED uf
-        JOIN TB_USER u ON uf.USER_ID = u.USER_ID
+        LEFT JOIN TB_USER u ON uf.USER_ID = u.USER_ID
         WHERE uf.USER_ID = #{userId}
     </select>
 
     <select id="countUserPosts" parameterType="string" resultType="int">
         SELECT
-            (SELECT COUNT(*)
-            FROM TB_MOVIE_POST
-            WHERE CREATE_ID = #{userId})
-        +
-            (SELECT COUNT(*)
-            FROM TB_MUSIC_POST
-            WHERE CREATE_ID = #{userId})
+        (SELECT COUNT(*) FROM TB_MOVIE_POST WHERE CREATE_ID = #{userId})
+        + (SELECT COUNT(*) FROM TB_MUSIC_POST WHERE CREATE_ID = #{userId})
         AS TOTAL_COUNT
         FROM DUAL
     </select>
 
-    <update id="updateTotalCount">
+    <update id="updateTotalCount" parameterType="com.recharge.userfeed.vo.UserFeedVO">
         UPDATE TB_USER_FEED
         SET TOTAL_COUNT = #{totalCount},
         UPDATED_DATE = SYSDATE,
@@ -40,7 +36,7 @@
         WHERE USER_ID = #{userId}
     </update>
 
-    <insert id="insertUserFeed">
+    <insert id="insertUserFeed" parameterType="string">
         INSERT INTO TB_USER_FEED (
         USER_ID, TOTAL_COUNT, TOTAL_FOLLOWER, TOTAL_FOLLOWING,
         CREATE_DATE, CREATE_ID, UPDATED_DATE, UPDATED_ID
@@ -50,9 +46,7 @@
         )
     </insert>
 
-
-    <!-- 🔼 팔로워 +1 (상대방) -->
-    <update id="increaseFollower">
+    <update id="increaseFollower" parameterType="com.recharge.userfeed.vo.UserFeedVO">
         UPDATE TB_USER_FEED
         SET TOTAL_FOLLOWER = TOTAL_FOLLOWER + 1,
         UPDATED_DATE = SYSDATE,
@@ -60,8 +54,7 @@
         WHERE USER_ID = #{userId}
     </update>
 
-    <!-- 🔽 팔로워 -1 (상대방) -->
-    <update id="decreaseFollower">
+    <update id="decreaseFollower" parameterType="com.recharge.userfeed.vo.UserFeedVO">
         UPDATE TB_USER_FEED
         SET TOTAL_FOLLOWER = TOTAL_FOLLOWER - 1,
         UPDATED_DATE = SYSDATE,
@@ -70,8 +63,7 @@
         AND TOTAL_FOLLOWER > 0
     </update>
 
-    <!-- 🔼 팔로잉 +1 (나) -->
-    <update id="increaseFollowing">
+    <update id="increaseFollowing" parameterType="com.recharge.userfeed.vo.UserFeedVO">
         UPDATE TB_USER_FEED
         SET TOTAL_FOLLOWING = TOTAL_FOLLOWING + 1,
         UPDATED_DATE = SYSDATE,
@@ -79,8 +71,7 @@
         WHERE USER_ID = #{userId}
     </update>
 
-    <!-- 🔽 팔로잉 -1 (나) -->
-    <update id="decreaseFollowing">
+    <update id="decreaseFollowing" parameterType="com.recharge.userfeed.vo.UserFeedVO">
         UPDATE TB_USER_FEED
         SET TOTAL_FOLLOWING = TOTAL_FOLLOWING - 1,
         UPDATED_DATE = SYSDATE,

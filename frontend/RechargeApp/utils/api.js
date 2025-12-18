@@ -7,14 +7,14 @@ import messaging from '@react-native-firebase/messaging';
 // Emulator : 10.0.2.2, apk : ip - 192.168.1.127
 export const API_BASE_URL =
   Platform.OS === 'android'
-   // ?'http://192.168.2.15:18090/api'
-    //: 'http://192.168.2.15:18090/api';
+    ?'http://192.168.2.15:18090/api'
+    : 'http://192.168.2.15:18090/api';
 
     //  ?'http://10.0.2.2:18090/api'
     //: 'http://10.0.2.2:18090/api';
 
-? 'http://192.168.0.210:18090/api'
-: 'http://192.168.0.210:18090/api';
+//? 'http://192.168.0.210:18090/api'
+//: 'http://192.168.0.210:18090/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
