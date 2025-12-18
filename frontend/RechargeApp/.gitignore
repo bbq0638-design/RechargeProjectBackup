@@ -64,4 +64,3 @@ buck-out/
 /vendor/bundle/
 
 google-services.json
-python/.env
