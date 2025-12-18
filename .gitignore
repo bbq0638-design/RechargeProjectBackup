@@ -1,1 +1,4 @@
 python/.env
+
+src/main/resources/application.properties
+src/main/resources/application-secret.properties

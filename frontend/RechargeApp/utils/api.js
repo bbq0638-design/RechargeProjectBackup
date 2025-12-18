@@ -7,14 +7,8 @@ import messaging from '@react-native-firebase/messaging';
 // Emulator : 10.0.2.2, apk : ip - 192.168.1.127
 export const API_BASE_URL =
   Platform.OS === 'android'
-    ?'http://192.168.2.15:18090/api'
-    : 'http://192.168.2.15:18090/api';
-
-    //  ?'http://10.0.2.2:18090/api'
-    //: 'http://10.0.2.2:18090/api';
-
-//? 'http://192.168.0.210:18090/api'
-//: 'http://192.168.0.210:18090/api';
+    ? 'http://192.168.2.14:18090/api'
+    : 'http://192.168.2.14:18090/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -73,15 +67,15 @@ export const login = async userData => {
       await AsyncStorage.setItem('authToken', user.token);
       await AsyncStorage.setItem('userNickname', user.userNickname);
 
-    //id랑 role 추가
-    if (user.userId) {
-      await AsyncStorage.setItem('userId', user.userId);
-      
-      // FCM 토큰 서버에 저장 (푸시 알림용)
-      saveFcmToken(user.userId);
+      //id랑 role 추가
+      if (user.userId) {
+        await AsyncStorage.setItem('userId', user.userId);
+
+        // FCM 토큰 서버에 저장 (푸시 알림용)
+        saveFcmToken(user.userId);
+      }
+      await AsyncStorage.setItem('userRole', user.userRole || 'USER');
     }
-    await AsyncStorage.setItem('userRole', user.userRole || 'USER');
-  }
     return user;
   } catch (err) {
     console.log('로그인 실패:', err.response?.data || err);
@@ -95,7 +89,7 @@ export const logout = async () => {
     await AsyncStorage.removeItem('authToken');
     await AsyncStorage.removeItem('userNickname');
     //추가
-    await AsyncStorage.removeItem('userId');   // 추가됨
+    await AsyncStorage.removeItem('userId'); // 추가됨
     await AsyncStorage.removeItem('userRole'); // 추가됨
 
     console.log('로그아웃 완료');
@@ -175,7 +169,7 @@ export const verifyEmail = async (email, authCode) => {
 };
 
 //회원 정보 조회
-export const getUserInfo = async (userId) => {
+export const getUserInfo = async userId => {
   try {
     const res = await api.get('/user/getUser', {params: {userId}});
     return res.data;
@@ -186,9 +180,9 @@ export const getUserInfo = async (userId) => {
 };
 
 //회원 정보 수정
-export const updateUserInfo = async (userData) => {
-  try{
-    const res =await api.post('/user/modify', userData);
+export const updateUserInfo = async userData => {
+  try {
+    const res = await api.post('/user/modify', userData);
     return res.data;
   } catch (err) {
     throw err.response?.data || '수정 실패';
@@ -211,13 +205,13 @@ export const profileResetPassword = async resetData => {
 //회원 탈퇴
 export const apiDeleteUser = async userId => {
   const response = await api.delete('/user/delete-user', {
-    params: userId
+    params: userId,
   });
   return response.data;
-} 
+};
 
 // FCM 토큰 서버 전송
-export const saveFcmToken = async (userId) => {
+export const saveFcmToken = async userId => {
   try {
     // 1. 알림 권한 요청 (iOS 및 안드로이드 13+ 대응)
     const authStatus = await messaging().requestPermission();
