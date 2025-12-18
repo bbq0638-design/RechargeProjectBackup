@@ -102,7 +102,7 @@ function MovieInfo({
                 color="#004e89"
               />
               <Text style={styles.releaseText}>
-                {`${movie.release_date.slice(0, 4)}년 ${movie.release_date.slice(5, 7)}월 ${movie.release_date.slice(8, 10)}일 개봉`}
+                {`${movie.release_date?.slice(0, 4)}년 ${movie.release_date?.slice(5, 7)}월 ${movie.release_date?.slice(8, 10)}일 개봉`}
               </Text>
             </View>
 
