@@ -38,4 +38,16 @@ public class MovieScheduler {
 
         log.info("인기 영화 갱신 완료");
     }
+
+    @Scheduled(cron = "0 0 3 * * *")
+    public void refreshUpcoming() {
+        movieService.getUpcomingMovies();
+    }
+
+    @Scheduled(cron = "0 0 3 ? * MON")
+    public void refreshUpcomingWeekly() {
+        movieService.refreshUpcomingMoviesWeekly();
+    }
 }
+
+

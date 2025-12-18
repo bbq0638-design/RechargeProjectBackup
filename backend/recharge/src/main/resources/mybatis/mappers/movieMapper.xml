@@ -47,13 +47,7 @@
         ON M.COMMON_CATEGORY_ID = C.COMMON_CATEGORY_ID
     </sql>
 
-    <!--    인기영화 기존 데이터 삭제하기 -->
-    <delete id="deletePopularMovies">
-        DELETE FROM TB_MOVIE WHERE MOVIE_FLAG = 'POPULAR'
-    </delete>
-
-    <!--   인기영화 신규  저장 -->
-    <insert id="insertPopularMovie">
+    <insert id="insertMovie" parameterType="MovieVO">
         INSERT INTO TB_MOVIE (
         MOVIE_ID,
         COMMON_CATEGORY_ID,
@@ -85,9 +79,16 @@
         'SYSTEM',
         SYSDATE,
         'SYSTEM',
-        'POPULAR'
+        #{movieFlag}
         )
     </insert>
+
+    <!--    인기영화 기존 데이터 삭제하기 -->
+    <delete id="deletePopularMovies">
+        DELETE FROM TB_MOVIE WHERE MOVIE_FLAG = 'POPULAR'
+    </delete>
+
+
 
     <!--    인기 영화 조회 -->
     <select id="selectWeeklyPopularMovies" resultMap="MovieMap">
@@ -121,42 +122,7 @@
         FROM TB_MOVIE
         WHERE MOVIE_ID = #{movieId}
     </select>
-    <!--비슷한 영화 저장-->
-    <insert id="insertSimilarMovie">
-        INSERT INTO TB_MOVIE (
-        MOVIE_ID,
-        COMMON_CATEGORY_ID,
-        MOVIE_POSTER,
-        MOVIE_TITLE,
-        MOVIE_SCORE,
-        MOVIE_COMMENT,
-        MOVIE_DIRECTOR,
-        MOVIE_ACTOR,
-        MOVIE_DATE,
-        MOVIE_TRAILER,
-        CREATE_DATE,
-        CREATE_ID,
-        UPDATED_DATE,
-        UPDATED_ID,
-        MOVIE_FLAG
-        ) VALUES (
-        #{movieId},
-        #{commonCategoryId, jdbcType=VARCHAR},
-        #{moviePoster, jdbcType=VARCHAR},
-        #{movieTitle, jdbcType=VARCHAR},
-        #{movieScore, jdbcType=VARCHAR},
-        #{movieComment, jdbcType=VARCHAR},
-        #{movieDirector, jdbcType=VARCHAR},
-        #{movieActor, jdbcType=VARCHAR},
-        #{movieDate, jdbcType=VARCHAR},
-        #{movieTrailer, jdbcType=VARCHAR},
-        SYSDATE,
-        'SYSTEM',
-        SYSDATE,
-        'SYSTEM',
-        'SIMILAR'
-        )
-    </insert>
+
 
     <select id="findRandomMovies" resultMap="MovieMap">
         <include refid="BaseSelect"/>
@@ -171,6 +137,25 @@
         FROM TB_COMMON_CATEGORY
         WHERE COMMON_CATEGORY_SYSTEM = #{system}
         AND COMMON_CATEGORY_CODE = #{code}
+    </select>
+
+    <delete id="deleteUpcomingMovies">
+        DELETE FROM TB_MOVIE
+        WHERE MOVIE_FLAG = 'UPCOMING'
+    </delete>
+
+    <update id="updateMovieFlag">
+        UPDATE TB_MOVIE
+        SET MOVIE_FLAG = #{movieFlag},
+        UPDATED_DATE = SYSDATE,
+        UPDATED_ID = 'SYSTEM'
+        WHERE MOVIE_ID = #{movieId}
+    </update>
+
+    <select id="selectUpcomingMovies" resultMap="MovieMap">
+        <include refid="BaseSelect"/>
+        WHERE M.MOVIE_FLAG = 'UPCOMING'
+        ORDER BY M.MOVIE_DATE ASC
     </select>
 
 

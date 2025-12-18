@@ -27,5 +27,5 @@ public interface MovieService {
 // 비슷한 장르 추천
     public List<MovieVO> getSimilarMovies(Long movieId);
 
-
+    void refreshUpcomingMoviesWeekly();
 }

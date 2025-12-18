@@ -62,7 +62,12 @@ function MediaHomeContentCard({posters = [], title, subtitle, loading}) {
     fade.value = withTiming(1, {duration: 500});
   };
 
-  const currentPoster = posters.length > 0 ? posters[index] : HeroPoster;
+  const getHighQualityPoster = url => {
+    if (!url) return url;
+    return url.replace('/w500/', '/w780/');
+  };
+  const rawPoster = posters.length > 0 ? posters[index] : null;
+  const currentPoster = getHighQualityPoster(rawPoster);
 
   return (
     <View style={styles.card}>

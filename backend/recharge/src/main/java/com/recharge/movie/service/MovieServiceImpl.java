@@ -147,6 +147,15 @@ public class MovieServiceImpl implements MovieService {
      * --------------------------------------------------------- */
     @Override
     public List<MovieVO> getUpcomingMovies() {
+        return movieDAO.selectUpcomingMovies();
+    }
+    @Transactional
+    public void refreshUpcomingMoviesWeekly() {
+
+        // 1️⃣ 기존 UPCOMING 전부 제거
+        movieDAO.deleteUpcomingMovies();
+
+        // 2️⃣ TMDB upcoming 재조회
         Map<String, Object> response =
                 tmdbWebClient.get()
                         .uri("/movie/upcoming")
@@ -154,19 +163,27 @@ public class MovieServiceImpl implements MovieService {
                         .bodyToMono(Map.class)
                         .block();
 
-        if (response == null) return List.of();
+        if (response == null) return;
 
         List<Map<String, Object>> results =
                 (List<Map<String, Object>>) response.get("results");
+        if (results == null) return;
 
-        if (results == null) return List.of();
+        results.stream()
+                .limit(10)
+                .forEach(item -> {
+                    Long movieId = Long.valueOf(item.get("id").toString());
+                    MovieVO vo = convertMovie(movieId, "UPCOMING");
+                    if (vo == null) return;
 
-        return results.stream()
-                .limit(5)
-                .map(r -> convertMovie(Long.valueOf(r.get("id").toString()), "UPCOMING"))
-                .filter(vo -> vo != null)
-                .collect(Collectors.toList());
+                    if (movieDAO.existsByMovieId(vo.getMovieId())) {
+                        movieDAO.updateMovieFlag(vo.getMovieId(), "UPCOMING");
+                    } else {
+                        movieDAO.insertMovie(vo);
+                    }
+                });
     }
+
 
     /** ---------------------------------------------------------
      *  인기 영화 저장용
@@ -215,7 +232,9 @@ public class MovieServiceImpl implements MovieService {
                 }
 
                 MovieVO vo = convertMovie(movieId, "POPULAR");
-                if (vo != null) list.add(vo);
+                if (vo != null) {
+                    list.add(vo);
+                }
             });
         }
         return list;
@@ -226,7 +245,7 @@ public class MovieServiceImpl implements MovieService {
     public void refreshPopularMovies(List<MovieVO> movieList) {
         movieDAO.deletePopularMovies();
         for (MovieVO vo : movieList) {
-            movieDAO.insertPopularMovie(vo);
+            movieDAO.insertMovie(vo);
         }
     }
 
@@ -314,15 +333,12 @@ public class MovieServiceImpl implements MovieService {
                 Long similarId = Long.valueOf(item.get("id").toString());
 
                 MovieVO vo = convertMovie(similarId, "SIMILAR");
+                if (vo == null) return;
 
-                if (vo != null) list.add(vo);
+                list.add(vo);
 
-                // DB 저장 (중복 제외)
-                if (!movieDAO.existsByMovieId(similarId)) {
-                    // vo null 체크
-                    if (vo != null && vo.getMovieId() != null) {
-                        movieDAO.insertSimilarMovie(vo);
-                    }
+                if (!movieDAO.existsByMovieId(vo.getMovieId())) {
+                    movieDAO.insertMovie(vo);
                 }
             });
 
