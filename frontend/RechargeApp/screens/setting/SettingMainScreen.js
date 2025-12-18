@@ -18,14 +18,14 @@ export default function SettingMainScreen ({ navigation }) {
                 </View>
                 <TouchableOpacity style={styles.menuItem}
                     onPress={() => navigation.navigate('ModifyProfile')}>
-                    <IconButton type="profileEdit" size={24} color="#004E89"/>
-                    <Text style={styles.menuText}>프로필 수정</Text>
+                     <MaterialCommunityIcons name="pencil-box-outline" size={24} color="#004E89"/>
+                    <Text style={styles.menuText}>   프로필 수정</Text>
                     <MaterialCommunityIcons name="chevron-right" size={24} color="#555555ff" />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem}
                     onPress={() => navigation.navigate('SettingLocation')}>
-                    <IconButton type="charge" size={24} color="#004E89"/>
-                    <Text style={styles.menuText}>권한 설정</Text>
+                    <MaterialCommunityIcons name="tune-vertical" size={24} color="#004E89"/>
+                    <Text style={styles.menuText}>  권한 설정</Text>
                     <MaterialCommunityIcons name="chevron-right" size={24} color="#555555ff" />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem}

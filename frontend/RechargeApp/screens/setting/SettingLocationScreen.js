@@ -13,10 +13,21 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 
 export default function SettingLocationScreen () {
     
-    const openSystemSettings = () => {
+    const openLocationSettings = () => {
         Alert.alert(
             "권한 설정 이동",
             "위치 권한을 변경하기 위해 휴대폰 설정 화면으로 이동합니다.",
+            [
+                {text: "취소", style: "cancel"},
+                {text: "이동", onPress: () => Linking.openSettings() }
+            ]
+        );
+    };
+
+    const openNotificationSettings = () => {
+        Alert.alert(
+            "권한 설정 이동",
+            "알림 권한을 변경하기 위해 휴대폰 설정 화면으로 이동합니다.",
             [
                 {text: "취소", style: "cancel"},
                 {text: "이동", onPress: () => Linking.openSettings() }
@@ -30,10 +41,17 @@ export default function SettingLocationScreen () {
                     <Text style={styles.titleText}>권한 설정</Text>
                 </View>
 
-                <TouchableOpacity style={styles.menuItem} onPress={openSystemSettings}>
+                <TouchableOpacity style={styles.menuItem} onPress={openLocationSettings}>
                    <View style={styles.textContainer}>
                         <Text style={styles.menuText}>위치 권한 설정 변경하기</Text>
                         <Text style={styles.menuSubText}>내 주변 충전소 검색을 이용하기 위해선 '위치 권한'을 허용해주세요.</Text>
+                    </View>
+                        <MaterialCommunityIcons name="chevron-right" size={24} color="#555555ff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.menuItem} onPress={openNotificationSettings}>
+                   <View style={styles.textContainer}>
+                        <Text style={styles.menuText}>알림 권한 설정 변경하기</Text>
+                        <Text style={styles.menuSubText}>새 소식과 반응 알림을 받기 위해선 '알림 권한'을 허용해주세요.</Text>
                     </View>
                         <MaterialCommunityIcons name="chevron-right" size={24} color="#555555ff" />
                 </TouchableOpacity>

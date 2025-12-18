@@ -28,6 +28,7 @@ function MediaSearchBar({
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchPressed, setSearchPressed] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   // 🔥 DropdownModal 위치 계산용 state
   const [modalVisible, setModalVisible] = useState(false);
@@ -61,13 +62,6 @@ function MediaSearchBar({
     }
   };
 
-  /** ✨ 디바운싱 */
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      if (!hideResults) search(query);
-    }, 700);
-    return () => clearTimeout(delay);
-  }, [query, hideResults]);
 
   /** 🔥 드롭다운 위치 측정 후 모달 열기 */
   const openDropdown = () => {
@@ -98,11 +92,25 @@ function MediaSearchBar({
         <View ref={inputRef} collapsable={false} style={{flex: 1}}>
           <CustomTextInput
             value={query}
-            onChangeText={t => {
-              setQuery(t);
-              if (t.trim()) openDropdown();
+            onChangeText={text => {
+              setQuery(text);
+              if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+              }
+              if(!text.trim()) {
+                setResults([]);
+                setModalVisible(false);
+                return;
+              }
+
+              typingTimeoutRef.current = setTimeout(() => {
+                search(text);
+                openDropdown();
+              }, 700);
             }}
             placeholder={placeholder}
+            blurOnSubmit={false}
+            returnKeyType="search"
             height={48}
           />
         </View>

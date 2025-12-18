@@ -69,9 +69,9 @@ public class NotificationService {
         }
 
         // 본인 알림 방지 (필요 시 주석 처리하여 본인 알림 허용 가능)
-//        if (receiverId == null) {
-//            return;
-//        }
+        if (receiverId == null) {
+            return;
+        }
 
         // 제목 길이 자르기
         if (postTitle != null && postTitle.length() > 10) {

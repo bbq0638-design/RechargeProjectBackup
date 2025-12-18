@@ -33,6 +33,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 LogBox.ignoreLogs([
   'new NativeEventEmitter', 
   'listener',
+  'Non-serializable values were found in the navigation state',
 ]);
 
 const Stack = createNativeStackNavigator();
@@ -44,23 +45,23 @@ export default function App() {
   const [userRole, setUserRole] = useState(null);
   const [userId, setUserId] = useState(null);
 
-  // 🔹 [중요] 안드로이드 13+ 알림 권한 요청 함수
-  const requestNotificationPermission = async () => {
-    if (Platform.OS === 'android' && Platform.Version >= 33) {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('알림 권한 허용됨');
-        } else {
-          console.log('알림 권한 거부됨');
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    }
-  };
+  // // 🔹 [중요] 안드로이드 13+ 알림 권한 요청 함수
+  // const requestNotificationPermission = async () => {
+  //   if (Platform.OS === 'android' && Platform.Version >= 33) {
+  //     try {
+  //       const granted = await PermissionsAndroid.request(
+  //         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+  //       );
+  //       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+  //         console.log('알림 권한 허용됨');
+  //       } else {
+  //         console.log('알림 권한 거부됨');
+  //       }
+  //     } catch (err) {
+  //       console.warn(err);
+  //     }
+  //   }
+  // };
 
   const handleDeepLink = event => {
     const url = event.url;
@@ -126,7 +127,7 @@ export default function App() {
   // ★★★★
   useEffect(() => {
     // 🔹 앱 시작 시 권한 요청 실행
-    requestNotificationPermission();
+    //requestNotificationPermission();
 
     PushNotification.createChannel(
       {
