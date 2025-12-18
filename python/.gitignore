@@ -1,0 +1,22 @@
+# 🐍 Python
+__pycache__/
+*.py[cod]
+
+# 🧪 Virtual Environment
+venv/
+.venv/
+
+# 🔐 Environment variables
+.env
+.env.*
+
+# 🧠 AI / FastAPI 캐시
+.python-version
+
+# 🖥️ OS
+.DS_Store
+Thumbs.db
+
+# 🛠️ Editor / IDE
+.vscode/
+.idea/
