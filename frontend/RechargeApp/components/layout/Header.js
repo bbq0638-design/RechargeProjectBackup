@@ -117,7 +117,7 @@ const fetchNotifications = async () => {
           setTimeout(() => {
             navigation.navigate('Movie', {
               screen: 'MovieDetail',
-              params: { postId: targetIdNum }
+              params: { movieId: targetIdNum, type:'post' }
             });
           }, 50);
           break;
