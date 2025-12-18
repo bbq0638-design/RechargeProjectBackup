@@ -89,39 +89,39 @@
         )
     </insert>
 
-<!--    인기 영화 조회 -->
+    <!--    인기 영화 조회 -->
     <select id="selectWeeklyPopularMovies" resultMap="MovieMap">
         <include refid="BaseSelect"/>
         WHERE M.MOVIE_FLAG = 'POPULAR'
         ORDER BY M.MOVIE_DATE DESC, M.MOVIE_ID DESC
     </select>
 
-<!-- 영화 상세 조회 페이지-->
+    <!-- 영화 상세 조회 페이지-->
     <select id="selectMovieById" parameterType="long" resultMap="MovieMap">
         <include refid="BaseSelect"/>
         WHERE M.MOVIE_ID = #{movieId}
     </select>
 
-<!--    인기 영화 업데이트 날짜 조회-->
+    <!--    인기 영화 업데이트 날짜 조회-->
     <select id="getLatestPopularCreateDate" resultType="string">
         SELECT TO_CHAR(MAX(CREATE_DATE), 'YYYY-MM-DD')
         FROM TB_MOVIE
         WHERE MOVIE_FLAG = 'POPULAR'
     </select>
-<!--장르 common category 테이블 매핑-->
+    <!--장르 common category 테이블 매핑-->
     <select id="findCategoryId" resultType="string">
         SELECT COMMON_CATEGORY_ID
         FROM TB_COMMON_CATEGORY
         WHERE COMMON_CATEGORY_SYSTEM = #{system}
         AND COMMON_CATEGORY_CODE = #{code}
     </select>
-<!--영화 중복 방지-->
+    <!--영화 중복 방지-->
     <select id="existsByMovieId" resultType="boolean">
         SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
         FROM TB_MOVIE
         WHERE MOVIE_ID = #{movieId}
     </select>
-<!--비슷한 영화 저장-->
+    <!--비슷한 영화 저장-->
     <insert id="insertSimilarMovie">
         INSERT INTO TB_MOVIE (
         MOVIE_ID,
@@ -161,6 +161,16 @@
     <select id="findRandomMovies" resultMap="MovieMap">
         <include refid="BaseSelect"/>
         ORDER BY DBMS_RANDOM.VALUE
+    </select>
+
+    <select id="findCategoryByTmdbCode" resultType="map">
+        SELECT
+        COMMON_CATEGORY_ID,
+        COMMON_CATEGORY_NAME,
+        COMMON_CATEGORY_CODE
+        FROM TB_COMMON_CATEGORY
+        WHERE COMMON_CATEGORY_SYSTEM = #{system}
+        AND COMMON_CATEGORY_CODE = #{code}
     </select>
 
 

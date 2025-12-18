@@ -30,4 +30,9 @@ public interface MovieDAO {
     void insertSimilarMovie(MovieVO vo);
 // 비슷한 영화 없을 경우 db에서 아무 영화 추천
     List<MovieVO> findRandomMovies();
+
+    Map<String, String> findCategoryByTmdbCode(
+            @Param("system") String system,
+            @Param("code") String code
+    );
 }

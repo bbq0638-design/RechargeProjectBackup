@@ -13,6 +13,7 @@ const MediaCards = ({
   isFavorite = false,
   showFavorite = true,
   onFavoriteToggle,
+  onPreviewPress, // ✅ 추가 (기존 영향 없음)
   style,
 }) => {
   const resolvedImage =
@@ -21,12 +22,17 @@ const MediaCards = ({
       : image;
 
   if (variant === 'musicChart') {
+    const ImageWrapper = onPreviewPress ? TouchableOpacity : View;
+
     return (
       <View style={[styles.card, styles.chartCard, style]}>
         {/* 앨범아트 */}
-        <View style={styles.imageWrapper}>
+        <ImageWrapper
+          activeOpacity={onPreviewPress ? 0.85 : undefined}
+          onPress={onPreviewPress}
+          style={styles.imageWrapper}>
           <Image source={{uri: resolvedImage}} style={styles.chartImage} />
-        </View>
+        </ImageWrapper>
 
         {/* 2열 구조 */}
         <View style={styles.rowWrapper}>
@@ -40,7 +46,7 @@ const MediaCards = ({
             </Text>
           </View>
 
-          {/* 오른쪽: FavoriteButton 옮김 */}
+          {/* 오른쪽: FavoriteButton */}
           <View style={styles.rightColumn}>
             {showFavorite && (
               <FavoriteButton
@@ -125,12 +131,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  /* --- 새로운 음악 차트 카드 --- */
+  /* --- 음악 차트 카드 --- */
   chartCard: {
     width: 140,
   },
 
-  // 앨범아트
   imageWrapper: {
     position: 'relative',
     marginBottom: 10,
@@ -143,15 +148,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#e3e3e3',
   },
 
-  // 즐겨찾기 버튼 (우측 상단)
-  favoriteWrapper: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    zIndex: 10,
-  },
-
-  // 아래 텍스트 + 아이콘 2열 구조
   rowWrapper: {
     flexDirection: 'row',
     marginTop: 6,
@@ -168,7 +164,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // 제목
   titleText: {
     fontSize: 15,
     fontWeight: '600',
@@ -176,7 +171,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
 
-  // 가수
   artistText: {
     fontSize: 13,
     color: '#666',

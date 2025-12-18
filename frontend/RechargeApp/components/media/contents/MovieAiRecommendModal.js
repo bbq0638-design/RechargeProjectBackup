@@ -5,7 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Keyboard,
 } from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import Modal from 'react-native-modal';
 
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -14,11 +16,11 @@ import CustomTextInput from '../../common/TextInput';
 import MediaCards from '../cards/MediaCards';
 import SelectableButton from '../../common/SelectableButton';
 import LoadingAnimation from '../../common/LoadingAnimation';
+import {fetchAiMovieRecommend} from '../../../utils/Movieapi';
 
 function MovieAiRecommendModal({visible, onClose, onResultPress}) {
   const contentType = 'movie';
 
-  const [mode, setMode] = useState('weather');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
@@ -31,17 +33,7 @@ function MovieAiRecommendModal({visible, onClose, onResultPress}) {
     }));
   };
 
-  const placeholder =
-    mode === 'weather'
-      ? '예) 맑은 날씨에 어울리는 영화 추천해줘'
-      : '예) 기분 좋을 때 보기 좋은 영화 추천해줘';
-
-  const mockMovie = [
-    {id: '1', title: 'Movie 1', img: 'https://placehold.co/185x278?text=M1'},
-    {id: '2', title: 'Movie 2', img: 'https://placehold.co/185x278?text=M2'},
-    {id: '3', title: 'Movie 3', img: 'https://placehold.co/185x278?text=M3'},
-    {id: '4', title: 'Movie 4', img: 'https://placehold.co/185x278?text=M4'},
-  ];
+  const placeholder = '예) 맑은 날씨에 어울리는 영화 추천해줘';
 
   /** 🔥 모달 닫힐 때 상태 초기화 */
   useEffect(() => {
@@ -52,14 +44,28 @@ function MovieAiRecommendModal({visible, onClose, onResultPress}) {
     }
   }, [visible]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!query.trim()) return;
-    setLoading(true);
+    Keyboard.dismiss();
 
-    setTimeout(() => {
-      setItems(mockMovie);
+    try {
+      setLoading(true);
+
+      const data = await fetchAiMovieRecommend(query);
+
+      const formatted = data.map(item => ({
+        id: item.movieId,
+        title: item.movieTitle,
+        image: item.moviePoster,
+      }));
+
+      setItems(formatted);
+    } catch (e) {
+      console.log('AI 추천 오류', e);
+      setItems([]);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -80,24 +86,6 @@ function MovieAiRecommendModal({visible, onClose, onResultPress}) {
           <TouchableOpacity onPress={onClose}>
             <MaterialCommunityIcons name="close" size={24} color="#333" />
           </TouchableOpacity>
-        </View>
-
-        {/* 날씨 / 기분 */}
-        <View style={styles.tabs}>
-          <SelectableButton
-            label="날씨"
-            selected={mode === 'weather'}
-            onPress={() => setMode('weather')}
-            icon={<MaterialCommunityIcons name="weather-sunny" />}
-            style={{marginRight: 10}}
-          />
-          <SelectableButton
-            label="기분"
-            selected={mode === 'mood'}
-            onPress={() => setMode('mood')}
-            icon={<MaterialCommunityIcons name="emoticon-happy-outline" />}
-            style={{marginRight: 10}}
-          />
         </View>
 
         {/* 입력창 */}
@@ -132,11 +120,11 @@ function MovieAiRecommendModal({visible, onClose, onResultPress}) {
                 <MediaCards
                   key={item.id}
                   title={item.title}
-                  image={item.img}
+                  image={item.image}
                   variant="movie"
-                  style={{marginBottom: 10}}
                   isFavorite={!!favorites[item.id]}
                   onFavoriteToggle={() => toggleFavorite(item.id)}
+                  style={{marginLeft: 15, marginBottom: 22}}
                   onPress={() => {
                     onClose();
                     onResultPress?.(item, contentType);
@@ -156,7 +144,7 @@ function MovieAiRecommendModal({visible, onClose, onResultPress}) {
 const styles = StyleSheet.create({
   modalContainer: {
     width: '100%',
-    padding: 20,
+    padding: 10,
     paddingBottom: 40,
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
@@ -168,6 +156,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 15,
   },
 
   title: {
@@ -188,14 +177,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 16,
-  },
-
-  empty: {
-    textAlign: 'center',
-    color: '#777',
-    fontSize: 15,
+    paddingBottom: 50,
   },
 });
 

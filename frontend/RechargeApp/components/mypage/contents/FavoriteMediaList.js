@@ -49,6 +49,16 @@ export default function FavoriteMediaList({
           type: 'musiclist',
         };
 
+      // 🔥 AI 음악 (merge)
+      case 'music_ai':
+        return {
+          id: bm.bookmarkTargetId,
+          title: bm.musicTitle,
+          author: bm.musicSinger,
+          image: bm.musicImagePath,
+          type: 'music_ai',
+        };
+
       default:
         return null;
     }
@@ -62,7 +72,6 @@ export default function FavoriteMediaList({
         try {
           const bookmarks = await fetchUserBookmarks(userId);
 
-          // 🔹 movie / music
           const movieItems = [];
           const musicItems = [];
 
@@ -71,15 +80,16 @@ export default function FavoriteMediaList({
             if (!normalized) return;
 
             if (normalized.type === 'movie') movieItems.push(normalized);
+
             if (
               normalized.type === 'music' ||
-              normalized.type === 'musiclist'
+              normalized.type === 'musiclist' ||
+              normalized.type === 'music_ai' // 🔥 merge
             ) {
               musicItems.push(normalized);
             }
           });
 
-          // 🔹 moviepost
           const moviePostIds = new Set(
             bookmarks
               .filter(b => b.bookmarkTargetType === 'moviepost')
@@ -94,8 +104,8 @@ export default function FavoriteMediaList({
               .map(p => ({
                 id: p.moviePostId,
                 title: p.moviePostTitle,
-                image: p.moviePoster, // ⭐ 이미 TMDB 적용됨
-                author: p.userNickname, // ⭐ 닉네임 포함
+                image: p.moviePoster,
+                author: p.userNickname,
                 type: 'moviepost',
               }));
 
@@ -171,16 +181,15 @@ export default function FavoriteMediaList({
                   image={item.image}
                   variant="musicChart"
                   showFavorite={!hideFavorite}
-                  isFavorite={true} // ⭐ 항상 true
+                  isFavorite={true}
                   onFavoriteToggle={async () => {
                     try {
                       await toggleBookmark({
                         userId,
-                        targetType: item.type, // music | musiclist
+                        targetType: item.type,
                         targetId: item.id,
                       });
 
-                      // ⭐ UI에서 즉시 제거
                       setMusic(prev =>
                         prev.filter(
                           m => !(m.type === item.type && m.id === item.id),

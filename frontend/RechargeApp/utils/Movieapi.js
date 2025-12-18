@@ -99,3 +99,16 @@ export const deleteMoviePost = async postId => {
     throw err.response?.data || '게시글 삭제 실패';
   }
 };
+
+// AI 영화 추천
+export const fetchAiMovieRecommend = async message => {
+  try {
+    const res = await api.post('/movie/ai', {
+      message,
+    });
+    return res.data;
+  } catch (err) {
+    console.log('AI 영화 추천 실패', err.response?.data || err);
+    throw err.response?.data || 'AI 영화 추천 실패';
+  }
+};

@@ -1,11 +1,24 @@
 import api from './api';
 
-export const toggleBookmark = async ({userId, targetType, targetId}) => {
+export const toggleBookmark = async ({
+  userId,
+  targetType,
+  targetId,
+  extMusicTitle,
+  extMusicSinger,
+  extMusicImagePath,
+}) => {
   const res = await api.post('/bookmarks/toggle', {
     userId,
     bookmarkTargetType: targetType.toLowerCase(),
     bookmarkTargetId: targetId,
+
+    // 🔥 AI 음악용 추가 필드
+    extMusicTitle,
+    extMusicSinger,
+    extMusicImagePath,
   });
+
   return res.data;
 };
 

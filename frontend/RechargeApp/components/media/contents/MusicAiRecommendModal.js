@@ -1,10 +1,11 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+   Keyboard,
 } from 'react-native';
 import Modal from 'react-native-modal';
 
@@ -12,56 +13,98 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Button from '../../common/Button';
 import CustomTextInput from '../../common/TextInput';
 import MediaCards from '../cards/MediaCards';
-import SelectableButton from '../../common/SelectableButton';
 import LoadingAnimation from '../../common/LoadingAnimation';
+import {recommendMusic} from '../../../utils/MusicAiApi';
+import {toggleBookmark} from '../../../utils/BookmarkApi';
+import {fetchBookmarkStatusMap} from '../../../utils/BookmarkApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function MusicAiRecommendModal({visible, onClose, onResultPress}) {
   const contentType = 'music';
 
-  const [mode, setMode] = useState('weather');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [favorites, setFavorites] = useState({});
+  const [userId, setUserId] = useState(null);
 
-  const toggleFavorite = id => {
+  const toggleFavorite = async item => {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) return;
+
+    const trackId = item.id;
+
     setFavorites(prev => ({
       ...prev,
-      [id]: !prev[id],
+      [trackId]: !prev[trackId],
     }));
+
+    try {
+      const result = await toggleBookmark({
+        userId,
+        targetType: 'music_ai',
+        targetId: trackId,
+        extMusicTitle: item.title,
+        extMusicSinger: item.artist,
+        extMusicImagePath: item.img,
+      });
+
+      setFavorites(prev => ({
+        ...prev,
+        [trackId]: Boolean(result),
+      }));
+    } catch (e) {
+      setFavorites(prev => ({
+        ...prev,
+        [trackId]: !prev[trackId],
+      }));
+      console.log('즐겨찾기 토글 실패', e);
+    }
   };
 
-  const placeholder =
-    mode === 'weather'
-      ? '예) 맑은 날씨에 어울리는 음악 추천해줘'
-      : '예) 기분 좋을 때 듣기 좋은 음악 추천해줘';
+  const loadFavorites = async tracks => {
+    try {
+      const ids = tracks.map(t => t.id);
 
-  const mockMusic = [
-    {
-      id: 'A1',
-      title: 'Music A1',
-      artist: '가수',
-      img: 'https://placehold.co/185x278?text=S1',
-    },
-    {
-      id: 'A2',
-      title: 'Music A2',
-      artist: '가수',
-      img: 'https://placehold.co/185x278?text=S2',
-    },
-    {
-      id: 'A3',
-      title: 'Music A3',
-      artist: '가수',
-      img: 'https://placehold.co/185x278?text=S3',
-    },
-    {
-      id: 'A4',
-      title: 'Music A4',
-      artist: '가수',
-      img: 'https://placehold.co/185x278?text=S4',
-    },
-  ];
+      const map = await fetchBookmarkStatusMap({
+        userId,
+        targetType: 'music_ai', // ✅ 수정
+        targetIds: ids,
+      });
+
+      setFavorites(map); // { trackId: true/false }
+    } catch (e) {
+      console.log('즐겨찾기 상태 조회 실패', e);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!query.trim()) return;
+    Keyboard.dismiss();
+    setLoading(true);
+    setItems([]);
+
+    try {
+      const res = await recommendMusic(query);
+
+      // 🔑 Python 응답 → UI용 매핑
+      const mapped = (res.tracks || []).map(track => ({
+        id: track.trackId,
+        title: track.title,
+        artist: track.artist,
+        img: track.artwork,
+        previewUrl: track.previewUrl, // 지금은 안 씀
+      }));
+
+      setItems(mapped);
+      await loadFavorites(mapped);
+    } catch (e) {
+      console.log('AI 음악 추천 실패:', e);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /** 🔥 모달 닫힐 때 상태 초기화 */
   useEffect(() => {
@@ -72,15 +115,20 @@ function MusicAiRecommendModal({visible, onClose, onResultPress}) {
     }
   }, [visible]);
 
-  const handleSubmit = () => {
-    if (!query.trim()) return;
-    setLoading(true);
+  useEffect(() => {
+    const loadUserId = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId) {
+          setUserId(storedUserId);
+        }
+      } catch (e) {
+        console.log('userId 로드 실패', e);
+      }
+    };
 
-    setTimeout(() => {
-      setItems(mockMusic);
-      setLoading(false);
-    }, 500);
-  };
+    loadUserId();
+  }, []);
 
   return (
     <Modal
@@ -102,29 +150,10 @@ function MusicAiRecommendModal({visible, onClose, onResultPress}) {
           </TouchableOpacity>
         </View>
 
-        {/* 날씨 / 기분 */}
-        <View style={styles.tabs}>
-          <SelectableButton
-            label="날씨"
-            selected={mode === 'weather'}
-            onPress={() => setMode('weather')}
-            icon={<MaterialCommunityIcons name="weather-sunny" />}
-            style={{marginRight: 10}}
-          />
-          <SelectableButton
-            label="기분"
-            selected={mode === 'mood'}
-            onPress={() => setMode('mood')}
-            icon={<MaterialCommunityIcons name="emoticon-happy-outline" />}
-            style={{marginRight: 10}}
-          />
-        </View>
-
         {/* 입력창 */}
         <CustomTextInput
           value={query}
           onChangeText={setQuery}
-          placeholder={placeholder}
           width="100%"
           height={50}
           style={{marginTop: 10}}
@@ -141,9 +170,7 @@ function MusicAiRecommendModal({visible, onClose, onResultPress}) {
         />
 
         {/* 결과 */}
-        <ScrollView
-          contentContainerStyle={styles.results}
-          showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.results}>
           {loading ? (
             <LoadingAnimation size={90} />
           ) : items.length > 0 ? (
@@ -155,18 +182,13 @@ function MusicAiRecommendModal({visible, onClose, onResultPress}) {
                   author={item.artist}
                   image={item.img}
                   variant="musicChart"
-                  style={{marginBottom: 10}}
                   isFavorite={!!favorites[item.id]}
-                  onFavoriteToggle={() => toggleFavorite(item.id)}
-                  onPress={() => {
-                    onClose();
-                    onResultPress?.(item, contentType);
-                  }}
+                  onFavoriteToggle={() => toggleFavorite(item)} // 🔥 item 전달
                 />
               ))}
             </View>
           ) : (
-            <Text style={styles.empty}>추천 결과를 찾을 수 없습니다.</Text>
+            <Text style={styles.empty}>추천 결과가 없습니다.</Text>
           )}
         </ScrollView>
       </View>

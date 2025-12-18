@@ -29,7 +29,7 @@ public class MovieServiceImpl implements MovieService {
      * --------------------------------------------------------- */
     public MovieVO getTmdbMovieDetail(Long movieId) {
 
-        // ⭐ 1) 기본 정보 조회
+        //  1) 기본 정보 조회
         Map<String, Object> detail =
                 tmdbWebClient.get()
                         .uri("/movie/{id}", movieId)
@@ -112,6 +112,19 @@ public class MovieServiceImpl implements MovieService {
                         .ifPresent(key -> vo.setMovieTrailer(YOUTUBE_WATCH_BASE + key));
             }
         }
+        if (genres != null && !genres.isEmpty()) {
+            String genreCode = genres.get(0).get("id").toString();
+
+            Map<String, String> category =
+                    movieDAO.findCategoryByTmdbCode("TMDB", genreCode);
+
+            if (category != null) {
+                vo.setGenreCode(category.get("COMMON_CATEGORY_CODE"));
+                vo.setGenreName(category.get("COMMON_CATEGORY_NAME"));
+                vo.setCommonCategoryId(category.get("COMMON_CATEGORY_ID"));
+            }
+        }
+
 
         return vo;
     }
@@ -187,6 +200,17 @@ public class MovieServiceImpl implements MovieService {
 
                 if (movieDAO.existsByMovieId(movieId)) {
                     System.out.println("중복 영화 skip → " + movieId);
+                    return;
+                }
+
+                double voteAvg =
+                        Double.parseDouble(item.get("vote_average").toString());
+                int voteCount =
+                        Integer.parseInt(item.get("vote_count").toString());
+
+                // 별점 6.5이상/ 평가수 500개 이상 필터링
+                if (voteAvg < 6.5 || voteCount < 500) {
+                    System.out.println("인기 필터 제외 → " + movieId);
                     return;
                 }
 

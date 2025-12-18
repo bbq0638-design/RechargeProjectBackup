@@ -6,7 +6,7 @@ import AiRecommendSection from '../../../components/media/cards/AiRecommendCard'
 import Button from '../../../components/common/Button';
 import GenreSelector from '../../../components/media/cards/GenreSelector';
 import MediaListSection from '../../../components/media/lists/MediaListsSection';
-import AiRecommendModal from '../../../components/media/contents/AiRecommendModal';
+import MovieAiRecommendModal from '../../../components/media/contents/MovieAiRecommendModal';
 import {
   fetchUpcomingMovies,
   fetchPopularMovies,
@@ -176,12 +176,15 @@ function FindMovieScreen() {
         </View>
       </ScrollView>
       {/* ai 모달 */}
-      <AiRecommendModal
+      <MovieAiRecommendModal
         visible={showAiModal}
         onClose={() => setShowAiModal(false)}
-        contentType="movie" // 영화 모드
+        contentType="movie"
         onResultPress={(item, type) => {
-          navigation.navigate('MovieDetail', {movieId: item.id});
+          navigation.navigate('MovieDetail', {
+            movieId: item.id,
+            type: 'popular',
+          });
         }}
       />
     </>

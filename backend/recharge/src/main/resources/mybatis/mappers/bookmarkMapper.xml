@@ -5,7 +5,9 @@
 
 <mapper namespace="com.recharge.bookmark.dao.BookmarkDAO">
 
-    <!-- 1. 북마크 존재 여부 -->
+    <!-- ========================================================= -->
+    <!-- 1️⃣ 북마크 존재 여부 -->
+    <!-- ========================================================= -->
     <select id="existsBookmark" resultType="int">
         SELECT COUNT(*)
         FROM TB_BOOKMARK
@@ -14,7 +16,9 @@
         AND BOOKMARK_TARGET_ID = #{bookmarkTargetId}
     </select>
 
-    <!-- 2. 북마크 등록 -->
+    <!-- ========================================================= -->
+    <!-- 2️⃣ 일반 북마크 등록 (movie / music / musiclist / moviepost) -->
+    <!-- ========================================================= -->
     <insert id="insertBookmark">
         <selectKey keyProperty="bookmarkId" resultType="long" order="BEFORE">
             SELECT SEQ_BOOKMARK.NEXTVAL FROM DUAL
@@ -41,7 +45,48 @@
         )
     </insert>
 
-    <!-- 3. 북마크 삭제 -->
+    <!-- ========================================================= -->
+    <!-- 3️⃣ AI 음악 북마크 등록 (⭐ 핵심) -->
+    <!-- ========================================================= -->
+    <insert id="insertAiMusicBookmark">
+        <selectKey keyProperty="bookmarkId" resultType="long" order="BEFORE">
+            SELECT SEQ_BOOKMARK.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO TB_BOOKMARK (
+        BOOKMARK_ID,
+        BOOKMARK_TARGET_TYPE,     -- music_ai
+        BOOKMARK_TARGET_ID,       -- iTunes trackId
+        USER_ID,
+
+        EXT_MUSIC_TITLE,
+        EXT_MUSIC_SINGER,
+        EXT_MUSIC_IMAGE_PATH,
+
+        CREATE_DATE,
+        CREATE_ID,
+        UPDATED_DATE,
+        UPDATED_ID
+        ) VALUES (
+        #{bookmarkId},
+        'music_ai',
+        #{bookmarkTargetId},
+        #{userId},
+
+        #{extMusicTitle},
+        #{extMusicSinger},
+        #{extMusicImagePath},
+
+        SYSDATE,
+        #{userId},
+        SYSDATE,
+        #{userId}
+        )
+    </insert>
+
+    <!-- ========================================================= -->
+    <!-- 4️⃣ 북마크 삭제 -->
+    <!-- ========================================================= -->
     <delete id="deleteBookmark">
         DELETE FROM TB_BOOKMARK
         WHERE USER_ID = #{userId}
@@ -49,57 +94,64 @@
         AND BOOKMARK_TARGET_ID = #{bookmarkTargetId}
     </delete>
 
-    <!-- 4. 유저 북마크 카드 조회 (⭐ 핵심) -->
+    <!-- ========================================================= -->
+    <!-- 5️⃣ 유저 북마크 목록 조회 (⭐ 핵심) -->
+    <!-- ========================================================= -->
     <select id="selectUserBookmarks"
             parameterType="string"
             resultType="com.recharge.bookmark.vo.BookmarkVO">
 
         SELECT
+        -- 공통
         B.BOOKMARK_ID,
+        B.USER_ID                AS userId,
         B.BOOKMARK_TARGET_TYPE   AS bookmarkTargetType,
         B.BOOKMARK_TARGET_ID     AS bookmarkTargetId,
 
+        /* ================= 🎬 Movie ================= */
         M.MOVIE_ID               AS movieId,
         M.MOVIE_TITLE            AS title,
         M.MOVIE_POSTER           AS image,
 
-
+        /* ================= 🎞 Movie Post ================= */
         MP.MOVIE_POST_ID         AS moviePostId,
         MP.MOVIE_POST_TITLE      AS moviePostTitle,
 
-
+        /* ================= 🎵 Music (내부 DB) ================= */
         MU.MUSIC_ID              AS musicId,
-        MU.MUSIC_SINGER          AS musicSinger,
         MU.MUSIC_TITLE           AS musicTitle,
+        MU.MUSIC_SINGER          AS musicSinger,
         MU.MUSIC_IMAGE_PATH      AS musicImagePath,
 
-
+        /* ================= 🎶 Music List ================= */
         ML.MUSIC_LIST_ID         AS musicListId,
-        ML.MUSIC_ID              AS listMusicId,
         ML.MUSIC_TITLE           AS listMusicTitle,
         ML.MUSIC_SINGER          AS listMusicSinger,
-        ML.MUSIC_IMAGE_PATH      AS listMusicImage
+        ML.MUSIC_IMAGE_PATH      AS listMusicImage,
+
+        /* ================= 🤖 AI Music ================= */
+        B.EXT_MUSIC_TITLE        AS extMusicTitle,
+        B.EXT_MUSIC_SINGER       AS extMusicSinger,
+        B.EXT_MUSIC_IMAGE_PATH   AS extMusicImagePath
 
         FROM TB_BOOKMARK B
 
-
+        /* 🎬 movie */
         LEFT JOIN TB_MOVIE M
         ON B.BOOKMARK_TARGET_TYPE = 'movie'
         AND B.BOOKMARK_TARGET_ID = M.MOVIE_ID
 
-
+        /* 🎞 movie post */
         LEFT JOIN TB_MOVIE_POST MP
         ON B.BOOKMARK_TARGET_TYPE = 'moviepost'
         AND B.BOOKMARK_TARGET_ID = MP.MOVIE_POST_ID
 
-        LEFT JOIN TB_MOVIE M2
-        ON MP.MOVIE_ID = M2.MOVIE_ID
-
-
+        /* 🎵 music (내부 DB) */
         LEFT JOIN TB_MUSIC MU
         ON B.BOOKMARK_TARGET_TYPE = 'music'
         AND B.BOOKMARK_TARGET_ID = MU.MUSIC_ID
 
+        /* 🎶 music list */
         LEFT JOIN TB_MUSIC_LIST ML
         ON B.BOOKMARK_TARGET_TYPE = 'musiclist'
         AND B.BOOKMARK_TARGET_ID = ML.MUSIC_LIST_ID

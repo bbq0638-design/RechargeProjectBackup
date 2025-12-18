@@ -33,7 +33,7 @@ public class MovieScheduler {
         log.info("인기 영화 갱신 중");
 
 //        tmdb 호출
-        List<MovieVO> popularList = movieService.fetchPopularMovies(2);
+        List<MovieVO> popularList = movieService.fetchPopularMovies(4);
         movieService.refreshPopularMovies(popularList);
 
         log.info("인기 영화 갱신 완료");

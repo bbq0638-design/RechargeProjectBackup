@@ -7,7 +7,7 @@ import AiRecommendSection from '../../../components/media/cards/AiRecommendCard'
 import Button from '../../../components/common/Button';
 import GenreSelector from '../../../components/media/cards/GenreSelector';
 import MediaListSection from '../../../components/media/lists/MediaListsSection';
-import AiRecommendModal from '../../../components/media/contents/AiRecommendModal';
+import MusicAiRecommendModal from '../../../components/media/contents/MusicAiRecommendModal';
 import {
   fetchAllMusic,
   fetchAllMusicPosts,
@@ -202,7 +202,7 @@ function FindMusicScreen() {
         </View>
       </ScrollView>
       {/* Ai 추천 모달 */}
-      <AiRecommendModal
+      <MusicAiRecommendModal
         visible={showAimodal}
         onClose={() => setShowAiModal(false)}
         contentType="musicChart"

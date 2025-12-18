@@ -42,4 +42,9 @@ public class BookmarkVO {
     private String listMusicTitle;
     private String listMusicSinger;
     private String listMusicImage;
+
+    private String extMusicTitle;
+    private String extMusicSinger;
+    private String extMusicImagePath;
+
 }
